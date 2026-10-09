@@ -149,6 +149,8 @@ class Board
     {
     }
 
+    Color const getSideToMove() { return m_sideToMove; }
+
     // we use this print function for testing purpose
     void print()
     {
