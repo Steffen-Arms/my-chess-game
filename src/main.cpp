@@ -1,10 +1,10 @@
 #include <iostream>
 
+#include "board.cpp"
 #include "engine_info.hpp"
 
 int main()
 {
-    std::cout << chess::engine_name() << " by " << chess::engine_author()
-              << '\n';
-    return 0;
+    Board testBoard{};
+    testBoard.print();
 }

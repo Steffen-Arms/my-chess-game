@@ -44,15 +44,17 @@ endif()
 # --- Engine library: all chess logic lives here ------------------------------
 add_library(engine_core
   src/engine_info.cpp
+  src/board.cpp
 )
-target_include_directories(engine_core PUBLIC src) 
-target_link_libraries(engine_core PUBLIC engine_flags) #this line look for headers in src/
+target_include_directories(engine_core PUBLIC src) #this line look for headers in src/
+target_link_libraries(engine_core PUBLIC engine_flags) 
 
 # --- Executable: only main(), later the UCI loop -----------------------------
 add_executable(engine src/main.cpp)
 target_link_libraries(engine PRIVATE engine_core) #this connect our main.cpp to the rest of the programm
 
 # --- Tests -------------------------------------------------------------------
+#we include the module CTest from CMake. BUILD_TESTING is define inside that model.
 include(CTest)   # defines BUILD_TESTING (ON by default) and enables ctest
 if(BUILD_TESTING)
   add_subdirectory(tests)
