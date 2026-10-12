@@ -1,78 +1,8 @@
+#include "board.h"
 #include <array>
 #include <iostream>
-#include <optional>
 #include <string>
 #include <string_view>
-
-enum class Color
-{
-    White,
-    Black,
-    No_color,
-};
-
-enum class PieceType
-{
-    Empty,
-    Not_valid,
-    Pawn,
-    Rook,
-    Bishop,
-    Knight,
-    Queen,
-    King,
-};
-
-struct Coord
-{
-    int row{0};
-    int col{0};
-};
-
-class Piece
-{
-  private:
-    Color m_color;
-    PieceType m_pieceType;
-
-  public:
-    Piece() : m_color{Color::No_color}, m_pieceType{PieceType::Empty} {};
-
-    Piece(Color color, PieceType pieceType)
-        : m_color{color}, m_pieceType{pieceType}
-    {
-    }
-
-    Color getColor() { return m_color; }
-    PieceType getType() { return m_pieceType; }
-
-    // we use the FEN notation for the pieces
-    char toChar()
-    {
-        switch (m_pieceType)
-        {
-        case PieceType::Empty:
-            return '.';
-        case PieceType::Not_valid:
-            return '#';
-        case PieceType::Pawn:
-            return 'p';
-        case PieceType::Rook:
-            return 'r';
-        case PieceType::Knight:
-            return 'n';
-        case PieceType::Bishop:
-            return 'b';
-        case PieceType::Queen:
-            return 'q';
-        case PieceType::King:
-            return 'k';
-        }
-        return '?';
-    }
-};
-
-using board_array = std::array<std::array<Piece, 12>, 12>;
 
 board_array startBoard()
 {
@@ -123,45 +53,42 @@ board_array startBoard()
     return board;
 }
 
-class Board
+Board::Board()
+    : m_board{startBoard()}, m_sideToMove{Color::White}, m_halfMoves{0}
 {
-  private:
-    // naive implementation with a 12 x 12 array to represent the 2 square
-    // boundary around the field. This makes the calculation for a valid move
-    // easier.
-    board_array m_board; // 12 rows and 12 columns
+}
 
-    Color m_sideToMove;
-    int m_halfMoves; // we have to count that for the 50 move rule
-    std::optional<Coord> m_enPassant; // The square a pawn can be capturedon en
-                                      // passant. Empty if none
+bool Board::isEmptyField(std::size_t row, std::size_t column) const
+{
+    return m_board[row][column].getType() == PieceType::Empty;
+}
 
-    // store the castrling rights for each color and which side (King or Queen
-    // side).
-    bool castlingRightsWhiteKing{true};
-    bool castlingRightsWhiteQueen{true};
-    bool castlingRightsBlackKing{true};
-    bool castlingRightsBlackQueen{true};
-
-  public:
-    // with now parameters we generate a board in the start position.
-    Board() : m_board{startBoard()}, m_sideToMove{Color::White}, m_halfMoves{0}
+// return false if the field is empty or not_valid or contain a piece of
+// ownColor
+bool Board::containEnemyPiece(std::size_t row, std::size_t column,
+                              Color ownColor) const
+{
+    // note if a field is empty or not valid it hat "no_color" as color. So it's
+    // enough to check agains the color.
+    if (ownColor == Color::White)
     {
+        return m_board[row][column].getColor() == Color::Black;
     }
-
-    Color const getSideToMove() { return m_sideToMove; }
-
-    // we use this print function for testing purpose
-    void print()
+    else
     {
-        std::cout << "This is the board \n";
-        for (auto row : m_board)
+        return m_board[row][column].getColor() == Color::White;
+    }
+}
+
+void Board::print() const
+{
+    std::cout << "This is the board\n";
+    for (const auto& row : m_board)
+    {
+        for (const auto& piece : row)
         {
-            for (auto piece : row)
-            {
-                std::cout << piece.toChar() << ' ';
-            }
-            std::cout << '\n';
+            std::cout << piece.toChar() << ' ';
         }
+        std::cout << '\n';
     }
-};
+}

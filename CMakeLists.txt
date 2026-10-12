@@ -45,6 +45,7 @@ endif()
 add_library(engine_core
   src/engine_info.cpp
   src/board.cpp
+  src/move.cpp
 )
 target_include_directories(engine_core PUBLIC src) #this line look for headers in src/
 target_link_libraries(engine_core PUBLIC engine_flags) 
