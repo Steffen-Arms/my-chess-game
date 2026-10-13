@@ -1,4 +1,5 @@
 #include "board.h"
+#include "move_list.h"
 #include <array>
 #include <iostream>
 #include <string>
@@ -80,6 +81,23 @@ bool Board::containEnemyPiece(std::size_t row, std::size_t column,
     }
 }
 
+bool Board::containEnemyPawn(std::size_t row, std::size_t column,
+                             Color ownColor) const
+{
+    // note if a field is empty or not valid it hat "no_color" as color. So it's
+    // enough to check agains the color.
+    if (ownColor == Color::White)
+    {
+        return m_board[row][column].getColor() == Color::Black &&
+               m_board[row][column].getType() == PieceType::Pawn;
+    }
+    else
+    {
+        return m_board[row][column].getColor() == Color::White &&
+               m_board[row][column].getType() == PieceType::Pawn;
+    }
+}
+
 void Board::print() const
 {
     std::cout << "This is the board\n";
@@ -91,4 +109,23 @@ void Board::print() const
         }
         std::cout << '\n';
     }
+}
+
+// ToDo: implement castle
+void Board::makeMove(Move move)
+{
+    m_board[move.to.row][move.to.column] =
+        m_board[move.from.row][move.from.column];
+    m_board[move.from.row][move.from.column] =
+        Piece{}; // if we make a move we leave a emtpy field behind
+}
+
+// ToDo: implement castle
+void Board::undoMove(Move move)
+{
+    m_board[move.from.row][move.from.column] =
+        m_board[move.to.row][move.to.column];
+
+    // note if we don't capture a piece move.capturePiece give as a empty piece.
+    m_board[move.to.row][move.to.column] = move.capturePiece;
 }

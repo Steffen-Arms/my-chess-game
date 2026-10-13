@@ -1,6 +1,7 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+#include "move_list.h"
 #include <array>
 #include <optional>
 
@@ -27,6 +28,7 @@ struct Coord
 {
     std::size_t row{0};
     std::size_t col{0};
+    bool operator==(const Coord&) const = default;
 };
 
 class Piece
@@ -84,11 +86,19 @@ class Board
     const board_array& getBoard() const { return m_board; }
 
     bool isEmptyField(std::size_t row, std::size_t column) const;
-    bool Board::containEnemyPiece(std::size_t row, std::size_t column,
-                                  Color ownColor) const;
+    bool containEnemyPiece(std::size_t row, std::size_t column,
+                           Color ownColor) const;
+    bool containEnemyPawn(std::size_t row, std::size_t column,
+                          Color ownColor) const;
 
     // For testing purposes.
     void print() const;
+
+    void setEnPassant(Coord coord) { m_enPassant = coord; }
+    std::optional<Coord> getEnPassant() const { return m_enPassant; }
+
+    void makeMove(Move);
+    void undoMove(Move);
 
   private:
     // Naive implementation: a 12x12 array with a 2-square border around the

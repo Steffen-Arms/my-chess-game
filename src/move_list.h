@@ -14,7 +14,9 @@ struct Move
 {
     Coord from;
     Coord to;
+    Piece capturePiece = Piece{};
     Piece transform = Piece{};
+    bool enPassage = false; // is true if this move create a enPassage right
 };
 
 // We need a data structur so we can access the last element of a array.
