@@ -2,12 +2,13 @@
 #include "move_list.h"
 #include <array>
 #include <iostream>
+#include <ranges>
 #include <string>
 #include <string_view>
 
-board_array startBoard()
+// board is a out parameter
+void fillBoardBoundaries(board_array& board)
 {
-    board_array board;
     // first we fill the boundaries with not valid squares
     board[0].fill(Piece(Color::No_color, PieceType::Not_valid));
     board[1].fill(Piece(Color::No_color, PieceType::Not_valid));
@@ -20,6 +21,12 @@ board_array startBoard()
     }
     board[10].fill(Piece(Color::No_color, PieceType::Not_valid));
     board[11].fill(Piece(Color::No_color, PieceType::Not_valid));
+}
+
+board_array startBoard()
+{
+    board_array board;
+    fillBoardBoundaries(board);
 
     // now we place the white pieces
     board[2][2] = Piece(Color::White, PieceType::Rook);
@@ -54,9 +61,129 @@ board_array startBoard()
     return board;
 }
 
+// upper case letters are white pieces and lower case or black once
+void Board::addPiece(std::size_t rowIndex, std::size_t columnIndex,
+                     char charPiece)
+{
+    char pieceType = static_cast<char>(std::tolower(charPiece));
+    switch (pieceType)
+    {
+    case 'p':
+        if (std::isupper(charPiece))
+        {
+            m_board[rowIndex][columnIndex] =
+                Piece{Color::White, PieceType::Pawn};
+        }
+        else
+        {
+            m_board[rowIndex][columnIndex] =
+                Piece{Color::Black, PieceType::Pawn};
+        }
+        break;
+    case 'r':
+        if (std::isupper(charPiece))
+        {
+            m_board[rowIndex][columnIndex] =
+                Piece{Color::White, PieceType::Rook};
+        }
+        else
+        {
+            m_board[rowIndex][columnIndex] =
+                Piece{Color::Black, PieceType::Rook};
+        }
+        break;
+    case 'n':
+        if (std::isupper(charPiece))
+        {
+            m_board[rowIndex][columnIndex] =
+                Piece{Color::White, PieceType::Knight};
+        }
+        else
+        {
+            m_board[rowIndex][columnIndex] =
+                Piece{Color::Black, PieceType::Knight};
+        }
+        break;
+    case 'b':
+        if (std::isupper(charPiece))
+        {
+            m_board[rowIndex][columnIndex] =
+                Piece{Color::White, PieceType::Bishop};
+        }
+        else
+        {
+            m_board[rowIndex][columnIndex] =
+                Piece{Color::Black, PieceType::Bishop};
+        }
+        break;
+    case 'q':
+        if (std::isupper(charPiece))
+        {
+            m_board[rowIndex][columnIndex] =
+                Piece{Color::White, PieceType::Queen};
+        }
+        else
+        {
+            m_board[rowIndex][columnIndex] =
+                Piece{Color::Black, PieceType::Queen};
+        }
+        break;
+    case 'k':
+        if (std::isupper(charPiece))
+        {
+            m_board[rowIndex][columnIndex] =
+                Piece{Color::White, PieceType::King};
+        }
+        else
+        {
+            m_board[rowIndex][columnIndex] =
+                Piece{Color::Black, PieceType::King};
+        }
+        break;
+    default:
+        break;
+    }
+}
+
 Board::Board()
     : m_board{startBoard()}, m_sideToMove{Color::White}, m_halfMoves{0}
 {
+}
+
+// We don't validate if its a valid FEN yet
+Board::Board(std::string_view fen) : m_board{}, m_sideToMove{}, m_halfMoves{}
+{
+    fillBoardBoundaries(m_board);
+    // fen has this format: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -
+    // 0 1
+    std::cout << "FEN: " << fen << '\n';
+
+    // first seperate the first part (pieces postion) from the other
+    // information
+    auto splitPosition = fen.find(' ');
+    std::string_view piecePositions = fen.substr(0, splitPosition);
+    std::string_view metaInformation = fen.substr(splitPosition + 1);
+
+    std::size_t rowIndex{7}; // note FEN notation start at rank (row) 8.
+    std::size_t columnIndex{0};
+    for (auto row : piecePositions | std::views::split('/'))
+    {
+        columnIndex = 0;
+        for (char charPiece : row)
+        {
+            if (charPiece >= '0' && charPiece <= '9')
+            {
+                columnIndex += static_cast<std::size_t>(
+                    charPiece -
+                    '0'); // here we convert the char number to a int
+            }
+            addPiece(rowIndex + 2, columnIndex + 2,
+                     charPiece); // Note in our board representation we have a
+                                 // boundary of 2 around the board, thats why +2
+            ++columnIndex;
+        }
+        --rowIndex;
+    }
 }
 
 bool Board::isEmptyField(std::size_t row, std::size_t column) const
@@ -101,7 +228,7 @@ bool Board::containEnemyPawn(std::size_t row, std::size_t column,
 void Board::print() const
 {
     std::cout << "This is the board\n";
-    for (const auto& row : m_board)
+    for (const auto& row : m_board | std::views::reverse)
     {
         for (const auto& piece : row)
         {
@@ -114,18 +241,30 @@ void Board::print() const
 // ToDo: implement castle
 void Board::makeMove(Move move)
 {
+    if (move.enPassage)
+    {
+        m_enPassant = move.to;
+    }
     m_board[move.to.row][move.to.column] =
         m_board[move.from.row][move.from.column];
     m_board[move.from.row][move.from.column] =
         Piece{}; // if we make a move we leave a emtpy field behind
+
+    changeColor();
 }
 
 // ToDo: implement castle
 void Board::undoMove(Move move)
 {
+    if (move.enPassage)
+    {
+        m_enPassant.reset();
+    }
     m_board[move.from.row][move.from.column] =
         m_board[move.to.row][move.to.column];
 
     // note if we don't capture a piece move.capturePiece give as a empty piece.
     m_board[move.to.row][move.to.column] = move.capturePiece;
+
+    changeColor();
 }

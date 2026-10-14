@@ -45,15 +45,19 @@ void addMovesOfOnePawn(const Piece& piece, const Board& board_ref, size_t row,
             // or rook we will keep it as a option to reflect the rules.
             moves.push_back(Move{{row, column},
                                  {row + 1, column},
+                                 Piece{},
                                  Piece{Color::White, PieceType::Queen}});
             moves.push_back(Move{{row, column},
                                  {row + 1, column},
+                                 Piece{},
                                  Piece{Color::White, PieceType::Rook}});
             moves.push_back(Move{{row, column},
                                  {row + 1, column},
+                                 Piece{},
                                  Piece{Color::White, PieceType::Bishop}});
             moves.push_back(Move{{row, column},
                                  {row + 1, column},
+                                 Piece{},
                                  Piece{Color::White, PieceType::Knight}});
 
             ///////////////////////////////////////////////////

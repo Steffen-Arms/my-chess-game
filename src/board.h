@@ -1,9 +1,12 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#include "move_list.h"
 #include <array>
 #include <optional>
+#include <string_view>
+
+// forward declaration
+struct Move;
 
 enum class Color
 {
@@ -27,7 +30,7 @@ enum class PieceType
 struct Coord
 {
     std::size_t row{0};
-    std::size_t col{0};
+    std::size_t column{0};
     bool operator==(const Coord&) const = default;
 };
 
@@ -58,17 +61,59 @@ class Piece
         case PieceType::Not_valid:
             return '#';
         case PieceType::Pawn:
-            return 'p';
+            if (m_color == Color::White)
+            {
+                return 'P';
+            }
+            else
+            {
+                return 'p';
+            };
         case PieceType::Rook:
-            return 'r';
+            if (m_color == Color::White)
+            {
+                return 'R';
+            }
+            else
+            {
+                return 'r';
+            };
         case PieceType::Knight:
-            return 'n';
+            if (m_color == Color::White)
+            {
+                return 'N';
+            }
+            else
+            {
+                return 'n';
+            };
         case PieceType::Bishop:
-            return 'b';
+            if (m_color == Color::White)
+            {
+                return 'B';
+            }
+            else
+            {
+                return 'b';
+            };
         case PieceType::Queen:
-            return 'q';
+            if (m_color == Color::White)
+            {
+                return 'Q';
+            }
+            else
+            {
+                return 'q';
+            };
         case PieceType::King:
-            return 'k';
+            if (m_color == Color::White)
+            {
+                return 'K';
+            }
+            else
+            {
+                return 'k';
+            };
         }
         return '?';
     }
@@ -82,7 +127,13 @@ class Board
     // With no parameters, the board is created in the start position.
     Board();
 
+    // We assume we obtain a string in the FEN format to discribe a board
+    // situation.
+    Board(std::string_view fen);
+
     Color getSideToMove() const { return m_sideToMove; }
+    void setSideToMove(Color color) { m_sideToMove = color; }
+
     const board_array& getBoard() const { return m_board; }
 
     bool isEmptyField(std::size_t row, std::size_t column) const;
@@ -100,13 +151,33 @@ class Board
     void makeMove(Move);
     void undoMove(Move);
 
+    void addPiece(std::size_t rowIndex, std::size_t columnIndex,
+                  char charPiece);
+
+    void changeColor()
+    {
+        if (m_sideToMove == Color::Black)
+        {
+            m_sideToMove = Color::White;
+        }
+        else
+        {
+            m_sideToMove = Color::Black;
+        }
+    }
+
   private:
     // Naive implementation: a 12x12 array with a 2-square border around the
     // 8x8 field, which makes checking for valid moves easier.
     board_array m_board;
 
     Color m_sideToMove;
-    int m_halfMoves;                  // counted for the 50-move rule
+    int m_halfMoves; // counted for the 50-move rule
+
+    // Note we only store a coordinate for enPassant. It is possible that the
+    // enemy pawn capture en passant from both side.
+    // Because the enPassant rule only count for the next half round this wont
+    // grant enpassant right to other pawn.
     std::optional<Coord> m_enPassant; // square where an en passant capture is
                                       // possible; empty if none
 
