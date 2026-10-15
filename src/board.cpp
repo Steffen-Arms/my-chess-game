@@ -173,9 +173,10 @@ Board::Board(std::string_view fen) : m_board{}, m_sideToMove{}, m_halfMoves{}
         {
             if (charPiece >= '0' && charPiece <= '9')
             {
-                columnIndex += static_cast<std::size_t>(
-                    charPiece -
-                    '0'); // here we convert the char number to a int
+                columnIndex += static_cast<std::size_t>(charPiece - '0') -
+                               1; // here we convert the char number to a int.
+                                  // Note we have to subtract 1 cause we already
+                                  // are on the current index.
             }
             addPiece(rowIndex + 2, columnIndex + 2,
                      charPiece); // Note in our board representation we have a
