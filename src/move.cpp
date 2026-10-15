@@ -130,11 +130,11 @@ void addMovesOfOnePawn(const Piece& piece, const Board& board_ref, size_t row,
         if (row == 6)
         {
             // en passage to the right or left
-            if (board_ref.getEnPassant() == Coord{row, column - 1})
+            if (board_ref.getEnPassant() == Coord{row + 1, column - 1})
             {
                 moves.push_back(Move{{row, column}, {row + 1, column - 1}});
             }
-            if (board_ref.getEnPassant() == Coord{row, column + 1})
+            if (board_ref.getEnPassant() == Coord{row + 1, column + 1})
             {
                 moves.push_back(Move{{row, column}, {row + 1, column + 1}});
             }
@@ -265,11 +265,11 @@ void addMovesOfOnePawn(const Piece& piece, const Board& board_ref, size_t row,
         if (row == 5)
         {
             // en passage to the right or left
-            if (board_ref.getEnPassant() == Coord{row, column - 1})
+            if (board_ref.getEnPassant() == Coord{row - 1, column - 1})
             {
                 moves.push_back(Move{{row, column}, {row - 1, column - 1}});
             }
-            if (board_ref.getEnPassant() == Coord{row, column + 1})
+            if (board_ref.getEnPassant() == Coord{row - 1, column + 1})
             {
                 moves.push_back(Move{{row, column}, {row - 1, column + 1}});
             }
@@ -520,11 +520,12 @@ void addMovesOfOneQueen(const Piece& piece, const Board& board_ref, size_t row,
     addMovesOfOneBishop(piece, board_ref, row, column, moves);
 }
 
+// Add a move if we don't hit a boundary
 void addMoveIfaField(Color ownColor, const Board& board_ref, size_t row,
                      size_t column, size_t nextRow, size_t nextColumn,
                      MoveList& moves)
 {
-    if (board_ref.isEmptyField(row, column))
+    if (board_ref.isEmptyField(nextRow, nextColumn))
     {
         moves.push_back(Move{{row, column}, {nextRow, nextColumn}});
     }
@@ -534,6 +535,117 @@ void addMoveIfaField(Color ownColor, const Board& board_ref, size_t row,
                              {nextRow, nextColumn},
                              board_ref.getBoard()[nextRow][nextColumn]});
     }
+}
+
+bool fieldIsUnderOrthogonalAttack(const Board& board_ref, std::size_t row,
+                                  std::size_t column)
+{
+    // We check for each direction the next field that is not empty. Then we
+    // check if it contain a dangerous enemy piece.
+    Color ownColor = board_ref.getSideToMove();
+    std::size_t nextColumn = column + 1;
+    while (board_ref.isEmptyField(row, nextColumn))
+    {
+        ++nextColumn;
+    }
+    if (board_ref.containOrthogonalEnemy(row, nextColumn, ownColor))
+    {
+        return true;
+    }
+    nextColumn = column - 1;
+    while (board_ref.isEmptyField(row, nextColumn))
+    {
+        --nextColumn;
+    }
+    if (board_ref.containOrthogonalEnemy(row, nextColumn, ownColor))
+    {
+        return true;
+    }
+
+    std::size_t nextRow = row + 1;
+    while ((board_ref.isEmptyField(nextRow, column)))
+    {
+        ++nextRow;
+    }
+    if (board_ref.containOrthogonalEnemy(nextRow, column, ownColor))
+    {
+        return true;
+    }
+    nextRow = row - 1;
+    while (board_ref.containOrthogonalEnemy(nextRow, column, ownColor))
+    {
+        --nextRow;
+    }
+    if (board_ref.containOrthogonalEnemy(nextRow, column, ownColor))
+    {
+        return true;
+    }
+
+    // if we dont find orthogonal enemies we return false
+    return false;
+}
+
+bool fieldIsUnderDiagonalAttack(const Board& board_ref, std::size_t row,
+                                std::size_t column)
+{
+    Color ownColor = board_ref.getSideToMove();
+    std::size_t nextRow = row + 1;
+    std::size_t nextColumn = column + 1;
+
+    while (board_ref.isEmptyField(nextRow, nextColumn))
+    {
+        ++nextRow;
+        ++nextColumn;
+    }
+    if (board_ref.containDiagonalEnemy(nextRow, nextColumn, ownColor))
+        return true;
+
+    nextRow = row - 1;
+    nextColumn = column - 1;
+    while ((board_ref.isEmptyField(nextRow, nextColumn)))
+    {
+        --nextRow;
+        --nextColumn;
+    }
+    if (board_ref.containDiagonalEnemy(nextRow, nextColumn, ownColor))
+        return true;
+
+    nextRow = row + 1;
+    nextColumn = column - 1;
+    while (board_ref.isEmptyField(nextRow, nextColumn))
+    {
+        ++nextRow;
+        --nextColumn;
+    }
+    if (board_ref.containDiagonalEnemy(nextRow, nextColumn, ownColor))
+        return true;
+
+    nextRow = row - 1;
+    nextColumn = column + 1;
+    while (board_ref.isEmptyField(nextRow, nextColumn))
+    {
+        --nextRow;
+        ++nextColumn;
+    }
+    if (board_ref.containDiagonalEnemy(nextRow, nextColumn, ownColor))
+        return true;
+
+    // if we don't find diagonal enemies we return false
+    return false;
+}
+
+// return true if a piece of the enemy attack this field right now.
+bool fieldIsUnderAttack(const Board& board_ref, std::size_t row,
+                        std::size_t column)
+{
+
+    // First we check for orthogonal enemies
+    if (fieldIsUnderOrthogonalAttack(board_ref, row, column))
+        return true;
+
+    // now we check for diagonal enemies
+    if (fieldIsUnderDiagonalAttack(board_ref, row, column))
+        return true;
 }
 
 // Note: here we don't check if the king is in check.
@@ -555,7 +667,19 @@ void addMovesOfOneKing(const Piece& piece, const Board& board_ref, size_t row,
     addMoveIfaField(ownColor, board_ref, row, column, row + 1, column - 1,
                     moves);
 
-    // ToDo implement rochade
+    // Here we handle the rochade
+    std::array<bool, 4> castleArray = board_ref.getCastleKing();
+    if (ownColor == Color::White)
+    {
+        // make sure the rochade is still allowed on this side.
+        // all field between the king and rook are empty
+        // all field the king pass should not be under attack
+        if (castleArray[0] && board_ref.isEmptyField(2, 7) &&
+            board_ref.isEmptyField(2, 8))
+        {
+            moves.push_back(Move{{row, column}, {2, 8}});
+        }
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////

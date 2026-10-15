@@ -148,10 +148,11 @@ void Board::addPiece(std::size_t rowIndex, std::size_t columnIndex,
 Board::Board()
     : m_board{startBoard()}, m_sideToMove{Color::White}, m_halfMoves{0}
 {
+    m_castleKing.fill(true);
 }
 
 // We don't validate if its a valid FEN yet
-Board::Board(std::string_view fen) : m_board{}, m_sideToMove{}, m_halfMoves{}
+Board::Board(std::string_view fen) : m_board{}
 {
     fillBoardBoundaries(m_board);
     // fen has this format: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -
@@ -164,6 +165,7 @@ Board::Board(std::string_view fen) : m_board{}, m_sideToMove{}, m_halfMoves{}
     std::string_view piecePositions = fen.substr(0, splitPosition);
     std::string_view metaInformation = fen.substr(splitPosition + 1);
 
+    // Here we construct the board pieces
     std::size_t rowIndex{7}; // note FEN notation start at rank (row) 8.
     std::size_t columnIndex{0};
     for (auto row : piecePositions | std::views::split('/'))
@@ -185,6 +187,82 @@ Board::Board(std::string_view fen) : m_board{}, m_sideToMove{}, m_halfMoves{}
         }
         --rowIndex;
     }
+
+    // Here we insert the metadata
+    std::cout << "Meta data: " << metaInformation << '\n';
+
+    // Default is no castling rights
+    m_castleKing.fill(false);
+
+    int count{0};
+    for (auto data_iterator : metaInformation | std::views::split(' '))
+    {
+        std::string_view data(data_iterator.begin(), data_iterator.end());
+        if (count == 0)
+        {
+            if (data == "w")
+            {
+                m_sideToMove = Color::White;
+            }
+            else
+            {
+                m_sideToMove = Color::Black;
+            }
+            ++count;
+        }
+        else if (count == 1)
+        {
+            for (auto letter : data)
+            {
+                if (letter == '-')
+                {
+                    break; // this mean there is no castling rights anymore
+                }
+                else if (letter == 'K')
+                {
+                    m_castleKing[0] = true;
+                }
+                else if (letter == 'Q')
+                {
+                    m_castleKing[1] = true;
+                }
+                else if (letter == 'k')
+                {
+                    m_castleKing[2] = true;
+                }
+                else if (letter == 'q')
+                {
+                    m_castleKing[3] = true;
+                }
+            }
+            ++count;
+        }
+        else if (count == 2)
+        {
+            if (data == "-")
+            {
+                m_enPassant.reset(); // There is no en passage field
+            }
+            else
+            {
+                std::size_t enPassant_Column = data[0] - 'a';
+                std::size_t enPassant_Row =
+                    data[1] - '0' -
+                    1; // subtract -1 because our coordinate system start by 0
+                m_enPassant = {enPassant_Row + 2, enPassant_Column + 2};
+            }
+            ++count;
+        }
+        else if (count == 3)
+        {
+            m_halfMoves = data[0] - '0';
+            ++count;
+        }
+        else if (count == 4)
+        {
+            m_fullMoves = data[0] - '0';
+        }
+    }
 }
 
 bool Board::isEmptyField(std::size_t row, std::size_t column) const
@@ -197,9 +275,10 @@ bool Board::isEmptyField(std::size_t row, std::size_t column) const
 bool Board::containEnemyPiece(std::size_t row, std::size_t column,
                               Color ownColor) const
 {
-    // note if a field is empty or not valid it hat "no_color" as color. So it's
-    // enough to check agains the color.
-    if (ownColor == Color::White)
+    Color ownColor = get
+        // note if a field is empty or not valid it hat "no_color" as color. So
+        // it's enough to check agains the color.
+        if (ownColor == Color::White)
     {
         return m_board[row][column].getColor() == Color::Black;
     }
@@ -207,6 +286,101 @@ bool Board::containEnemyPiece(std::size_t row, std::size_t column,
     {
         return m_board[row][column].getColor() == Color::White;
     }
+}
+
+// orthogonal enemies are rook and queen
+bool Board::containOrthogonalEnemy(std::size_t row, std::size_t column,
+                                   Color ownColor) const
+{
+    if (ownColor == Color::White)
+    {
+        if (m_board[row][column].getColor() == Color::Black)
+        {
+            return m_board[row][column].getType() == PieceType::Rook ||
+                   m_board[row][column].getType() == PieceType::Queen;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else
+    {
+        if (m_board[row][column].getColor() == Color::White)
+        {
+            return m_board[row][column].getType() == PieceType::Rook ||
+                   m_board[row][column].getType() == PieceType::Queen;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    return false;
+}
+
+// diagonal enemies are bishop and queen
+bool Board::containDiagonalEnemy(std::size_t row, std::size_t column,
+                                 Color ownColor) const
+{
+    if (ownColor == Color::White)
+    {
+        if (m_board[row][column].getColor() == Color::Black)
+        {
+            return m_board[row][column].getType() == PieceType::Bishop ||
+                   m_board[row][column].getType() == PieceType::Queen;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else
+    {
+        if (m_board[row][column].getColor() == Color::White)
+        {
+            return m_board[row][column].getType() == PieceType::Bishop ||
+                   m_board[row][column].getType() == PieceType::Queen;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    return false;
+}
+
+constexpr Color oppositeColor(Color c)
+{
+    if (c == Color::No_color)
+    {
+        return Color::No_color;
+    }
+    else
+    {
+        return c == Color::White ? Color::Black : Color::White;
+    }
+}
+
+bool Board::fieldContainEnemyKnight(std::size_t row, std::size_t column,
+                                    Color ownColor) const
+{
+
+    return m_board[row][column].getType() == PieceType::Knight &&
+           m_board[row][column].getColor() == oppositeColor(ownColor);
+}
+
+bool Board::isUnderKnightAttack(std::size_t row, std::size_t column,
+                                Color ownColor) const
+{
+    return fieldContainEnemyKnight(row + 2, column + 1, ownColor) ||
+           fieldContainEnemyKnight(row + 1, column + 2, ownColor) ||
+           fieldContainEnemyKnight(row - 1, column + 2, ownColor) ||
+           fieldContainEnemyKnight(row - 2, column + 1, ownColor) ||
+           fieldContainEnemyKnight(row - 2, column - 1, ownColor) ||
+           fieldContainEnemyKnight(row - 1, column - 2, ownColor) ||
+           fieldContainEnemyKnight(row + 1, column - 2, ownColor) ||
+           fieldContainEnemyKnight(row + 2, column - 1, ownColor);
 }
 
 bool Board::containEnemyPawn(std::size_t row, std::size_t column,
@@ -251,7 +425,7 @@ void Board::makeMove(Move move)
     m_board[move.from.row][move.from.column] =
         Piece{}; // if we make a move we leave a emtpy field behind
 
-    changeColor();
+    changeSideToMove();
 }
 
 // ToDo: implement castle
@@ -267,5 +441,5 @@ void Board::undoMove(Move move)
     // note if we don't capture a piece move.capturePiece give as a empty piece.
     m_board[move.to.row][move.to.column] = move.capturePiece;
 
-    changeColor();
+    changeSideToMove();
 }

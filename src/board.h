@@ -2,6 +2,7 @@
 #define BOARD_H
 
 #include <array>
+#include <cassert>
 #include <optional>
 #include <string_view>
 
@@ -141,6 +142,14 @@ class Board
                            Color ownColor) const;
     bool containEnemyPawn(std::size_t row, std::size_t column,
                           Color ownColor) const;
+    bool containOrthogonalEnemy(std::size_t row, std::size_t column,
+                                Color ownColor) const;
+    bool containDiagonalEnemy(std::size_t row, std::size_t column,
+                              Color ownColor) const;
+    bool isUnderKnightAttack(std::size_t row, std::size_t column,
+                             Color ownColor) const;
+    bool fieldContainEnemyKnight(std::size_t row, std::size_t column,
+                                 Color ownColor) const;
 
     // For testing purposes.
     void print() const;
@@ -154,7 +163,7 @@ class Board
     void addPiece(std::size_t rowIndex, std::size_t columnIndex,
                   char charPiece);
 
-    void changeColor()
+    void changeSideToMove()
     {
         if (m_sideToMove == Color::Black)
         {
@@ -166,6 +175,13 @@ class Board
         }
     }
 
+    std::array<bool, 4> getCastleKing() const { return m_castleKing; }
+    void setCastleKing(std::size_t index, bool value)
+    {
+        assert(index < 4 && "getCastleKing to big index");
+        m_castleKing[index] = value;
+    }
+
   private:
     // Naive implementation: a 12x12 array with a 2-square border around the
     // 8x8 field, which makes checking for valid moves easier.
@@ -173,6 +189,7 @@ class Board
 
     Color m_sideToMove;
     int m_halfMoves; // counted for the 50-move rule
+    int m_fullMoves;
 
     // Note we only store a coordinate for enPassant. It is possible that the
     // enemy pawn capture en passant from both side.
@@ -182,10 +199,9 @@ class Board
                                       // possible; empty if none
 
     // Castling rights per color and side.
-    bool m_castleWhiteKing{true};
-    bool m_castleWhiteQueen{true};
-    bool m_castleBlackKing{true};
-    bool m_castleBlackQueen{true};
+    // position 0 is for white king side, position 1 is for white queen side
+    // postion 2 is for black king side, position 3 is for black queen side
+    std::array<bool, 4> m_castleKing;
 };
 
 #endif
