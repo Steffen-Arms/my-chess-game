@@ -9,6 +9,9 @@
 // forward declaration
 struct Move;
 
+constexpr std::array<std::pair<std::size_t, std::size_t>, 8> neighborsOffset = {
+    {{1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0}, {-1, -1}, {0, -1}, {1, -1}}};
+
 enum class Color
 {
     White,
@@ -138,18 +141,21 @@ class Board
     const board_array& getBoard() const { return m_board; }
 
     bool isEmptyField(std::size_t row, std::size_t column) const;
-    bool containEnemyPiece(std::size_t row, std::size_t column,
-                           Color ownColor) const;
-    bool containEnemyPawn(std::size_t row, std::size_t column,
-                          Color ownColor) const;
-    bool containOrthogonalEnemy(std::size_t row, std::size_t column,
-                                Color ownColor) const;
-    bool containDiagonalEnemy(std::size_t row, std::size_t column,
-                              Color ownColor) const;
-    bool isUnderKnightAttack(std::size_t row, std::size_t column,
-                             Color ownColor) const;
-    bool fieldContainEnemyKnight(std::size_t row, std::size_t column,
-                                 Color ownColor) const;
+    bool containEnemyPiece(std::size_t row, std::size_t column) const;
+    bool containEnemyPawn(std::size_t row, std::size_t column) const;
+    bool containOrthogonalEnemy(std::size_t row, std::size_t column) const;
+    bool containDiagonalEnemy(std::size_t row, std::size_t column) const;
+    bool isUnderKnightAttack(std::size_t row, std::size_t column) const;
+    bool fieldContainEnemyKnight(std::size_t row, std::size_t column) const;
+    bool fieldIsUnderAttack(std::size_t row, std::size_t column) const;
+    bool fieldIsUnderOrthogonalAttack(std::size_t row,
+                                      std::size_t column) const;
+    bool fieldIsUnderDiagonalAttack(std::size_t row, std::size_t column) const;
+    bool isUnderPawnAttack(std::size_t row, std::size_t column) const;
+    bool isUnderKingAttack(std::size_t row, std::size_t column) const;
+
+    void makeTestMove(Move move);
+    void undoTestMove(Move move);
 
     // For testing purposes.
     void print() const;
@@ -175,6 +181,9 @@ class Board
         }
     }
 
+    // this array hold the booleans if a rochade is still possible
+    // index 0 is white short rochade, index 1 is white long rochade
+    // index 2 is black short rochade, index 3 is black long rochade
     std::array<bool, 4> getCastleKing() const { return m_castleKing; }
     void setCastleKing(std::size_t index, bool value)
     {

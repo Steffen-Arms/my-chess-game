@@ -6,6 +6,18 @@
 #include <string>
 #include <string_view>
 
+constexpr Color oppositeColor(Color c)
+{
+    if (c == Color::No_color)
+    {
+        return Color::No_color;
+    }
+    else
+    {
+        return c == Color::White ? Color::Black : Color::White;
+    }
+}
+
 // board is a out parameter
 void fillBoardBoundaries(board_array& board)
 {
@@ -245,10 +257,12 @@ Board::Board(std::string_view fen) : m_board{}
             }
             else
             {
-                std::size_t enPassant_Column = data[0] - 'a';
+                std::size_t enPassant_Column =
+                    static_cast<size_t>(data[0] - 'a');
+
+                // subtract -1 because our coordinate system start by 0
                 std::size_t enPassant_Row =
-                    data[1] - '0' -
-                    1; // subtract -1 because our coordinate system start by 0
+                    static_cast<size_t>(data[1] - '0' - 1);
                 m_enPassant = {enPassant_Row + 2, enPassant_Column + 2};
             }
             ++count;
@@ -272,27 +286,16 @@ bool Board::isEmptyField(std::size_t row, std::size_t column) const
 
 // return false if the field is empty or not_valid or contain a piece of
 // ownColor
-bool Board::containEnemyPiece(std::size_t row, std::size_t column,
-                              Color ownColor) const
+bool Board::containEnemyPiece(std::size_t row, std::size_t column) const
 {
-    Color ownColor = get
-        // note if a field is empty or not valid it hat "no_color" as color. So
-        // it's enough to check agains the color.
-        if (ownColor == Color::White)
-    {
-        return m_board[row][column].getColor() == Color::Black;
-    }
-    else
-    {
-        return m_board[row][column].getColor() == Color::White;
-    }
+    // note if a field is empty or not valid it hat "no_color" as color.
+    return m_board[row][column].getColor() == oppositeColor(m_sideToMove);
 }
 
 // orthogonal enemies are rook and queen
-bool Board::containOrthogonalEnemy(std::size_t row, std::size_t column,
-                                   Color ownColor) const
+bool Board::containOrthogonalEnemy(std::size_t row, std::size_t column) const
 {
-    if (ownColor == Color::White)
+    if (m_sideToMove == Color::White)
     {
         if (m_board[row][column].getColor() == Color::Black)
         {
@@ -320,10 +323,9 @@ bool Board::containOrthogonalEnemy(std::size_t row, std::size_t column,
 }
 
 // diagonal enemies are bishop and queen
-bool Board::containDiagonalEnemy(std::size_t row, std::size_t column,
-                                 Color ownColor) const
+bool Board::containDiagonalEnemy(std::size_t row, std::size_t column) const
 {
-    if (ownColor == Color::White)
+    if (m_sideToMove == Color::White)
     {
         if (m_board[row][column].getColor() == Color::Black)
         {
@@ -350,54 +352,31 @@ bool Board::containDiagonalEnemy(std::size_t row, std::size_t column,
     return false;
 }
 
-constexpr Color oppositeColor(Color c)
-{
-    if (c == Color::No_color)
-    {
-        return Color::No_color;
-    }
-    else
-    {
-        return c == Color::White ? Color::Black : Color::White;
-    }
-}
-
-bool Board::fieldContainEnemyKnight(std::size_t row, std::size_t column,
-                                    Color ownColor) const
+bool Board::fieldContainEnemyKnight(std::size_t row, std::size_t column) const
 {
 
     return m_board[row][column].getType() == PieceType::Knight &&
-           m_board[row][column].getColor() == oppositeColor(ownColor);
+           m_board[row][column].getColor() == oppositeColor(m_sideToMove);
 }
 
-bool Board::isUnderKnightAttack(std::size_t row, std::size_t column,
-                                Color ownColor) const
+bool Board::isUnderKnightAttack(std::size_t row, std::size_t column) const
 {
-    return fieldContainEnemyKnight(row + 2, column + 1, ownColor) ||
-           fieldContainEnemyKnight(row + 1, column + 2, ownColor) ||
-           fieldContainEnemyKnight(row - 1, column + 2, ownColor) ||
-           fieldContainEnemyKnight(row - 2, column + 1, ownColor) ||
-           fieldContainEnemyKnight(row - 2, column - 1, ownColor) ||
-           fieldContainEnemyKnight(row - 1, column - 2, ownColor) ||
-           fieldContainEnemyKnight(row + 1, column - 2, ownColor) ||
-           fieldContainEnemyKnight(row + 2, column - 1, ownColor);
+    return fieldContainEnemyKnight(row + 2, column + 1) ||
+           fieldContainEnemyKnight(row + 1, column + 2) ||
+           fieldContainEnemyKnight(row - 1, column + 2) ||
+           fieldContainEnemyKnight(row - 2, column + 1) ||
+           fieldContainEnemyKnight(row - 2, column - 1) ||
+           fieldContainEnemyKnight(row - 1, column - 2) ||
+           fieldContainEnemyKnight(row + 1, column - 2) ||
+           fieldContainEnemyKnight(row + 2, column - 1);
 }
 
-bool Board::containEnemyPawn(std::size_t row, std::size_t column,
-                             Color ownColor) const
+bool Board::containEnemyPawn(std::size_t row, std::size_t column) const
 {
     // note if a field is empty or not valid it hat "no_color" as color. So it's
     // enough to check agains the color.
-    if (ownColor == Color::White)
-    {
-        return m_board[row][column].getColor() == Color::Black &&
-               m_board[row][column].getType() == PieceType::Pawn;
-    }
-    else
-    {
-        return m_board[row][column].getColor() == Color::White &&
-               m_board[row][column].getType() == PieceType::Pawn;
-    }
+    return m_board[row][column].getColor() == oppositeColor(m_sideToMove) &&
+           m_board[row][column].getType() == PieceType::Pawn;
 }
 
 void Board::print() const
@@ -411,6 +390,33 @@ void Board::print() const
         }
         std::cout << '\n';
     }
+}
+
+// same method as makeMove but without changing the color
+// this function is just to validate the field after one move
+void Board::makeTestMove(Move move)
+{
+    if (move.enPassage)
+    {
+        m_enPassant = move.to;
+    }
+    m_board[move.to.row][move.to.column] =
+        m_board[move.from.row][move.from.column];
+    m_board[move.from.row][move.from.column] =
+        Piece{}; // if we make a move we leave a emtpy field behind
+}
+
+void Board::undoTestMove(Move move)
+{
+    if (move.enPassage)
+    {
+        m_enPassant.reset();
+    }
+    m_board[move.from.row][move.from.column] =
+        m_board[move.to.row][move.to.column];
+
+    // note if we don't capture a piece move.capturePiece give as a empty piece.
+    m_board[move.to.row][move.to.column] = move.capturePiece;
 }
 
 // ToDo: implement castle
@@ -442,4 +448,155 @@ void Board::undoMove(Move move)
     m_board[move.to.row][move.to.column] = move.capturePiece;
 
     changeSideToMove();
+}
+
+///////////////////
+///////////////////////
+
+// return true if a piece of the enemy attack this field right now.
+// return false otherwise or if its not a valid field
+bool Board::fieldIsUnderAttack(std::size_t row, std::size_t column) const
+{
+    // first check if its a valid field
+    if (m_board[row][column].getType() == PieceType::Not_valid)
+    {
+        return false;
+    }
+
+    // we check for orthogonal enemies
+    if (fieldIsUnderOrthogonalAttack(row, column))
+        return true;
+
+    // now we check for diagonal enemies
+    if (fieldIsUnderDiagonalAttack(row, column))
+        return true;
+
+    if (isUnderKnightAttack(row, column))
+        return true;
+
+    // check if enemy pawn attack field
+    if (isUnderPawnAttack(row, column))
+        return true;
+
+    if (isUnderKingAttack(row, column))
+        return true;
+
+    return false;
+}
+
+bool Board::fieldIsUnderOrthogonalAttack(std::size_t row,
+                                         std::size_t column) const
+{
+    // We check for each direction the next field that is not empty. Then we
+    // check if it contain a dangerous enemy piece.
+    std::size_t nextColumn = column + 1;
+    while (isEmptyField(row, nextColumn))
+    {
+        ++nextColumn;
+    }
+    if (containOrthogonalEnemy(row, nextColumn))
+        return true;
+
+    nextColumn = column - 1;
+    while (isEmptyField(row, nextColumn))
+    {
+        --nextColumn;
+    }
+    if (containOrthogonalEnemy(row, nextColumn))
+        return true;
+
+    std::size_t nextRow = row + 1;
+    while ((isEmptyField(nextRow, column)))
+    {
+        ++nextRow;
+    }
+    if (containOrthogonalEnemy(nextRow, column))
+        return true;
+
+    nextRow = row - 1;
+    while (containOrthogonalEnemy(nextRow, column))
+    {
+        --nextRow;
+    }
+    if (containOrthogonalEnemy(nextRow, column))
+        return true;
+
+    // if we dont find orthogonal enemies we return false
+    return false;
+}
+
+bool Board::fieldIsUnderDiagonalAttack(std::size_t row,
+                                       std::size_t column) const
+{
+    std::size_t nextRow = row + 1;
+    std::size_t nextColumn = column + 1;
+
+    while (isEmptyField(nextRow, nextColumn))
+    {
+        ++nextRow;
+        ++nextColumn;
+    }
+    if (containDiagonalEnemy(nextRow, nextColumn))
+        return true;
+
+    nextRow = row - 1;
+    nextColumn = column - 1;
+    while ((isEmptyField(nextRow, nextColumn)))
+    {
+        --nextRow;
+        --nextColumn;
+    }
+    if (containDiagonalEnemy(nextRow, nextColumn))
+        return true;
+
+    nextRow = row + 1;
+    nextColumn = column - 1;
+    while (isEmptyField(nextRow, nextColumn))
+    {
+        ++nextRow;
+        --nextColumn;
+    }
+    if (containDiagonalEnemy(nextRow, nextColumn))
+        return true;
+
+    nextRow = row - 1;
+    nextColumn = column + 1;
+    while (isEmptyField(nextRow, nextColumn))
+    {
+        --nextRow;
+        ++nextColumn;
+    }
+    if (containDiagonalEnemy(nextRow, nextColumn))
+        return true;
+
+    // if we don't find diagonal enemies we return false
+    return false;
+}
+
+bool Board::isUnderPawnAttack(std::size_t row, std::size_t column) const
+{
+    if (m_sideToMove == Color::White)
+    {
+        return containEnemyPawn(row + 1, column - 1) ||
+               containEnemyPawn(row + 1, column + 1);
+    }
+    else
+    {
+        return containEnemyPawn(row - 1, column - 1) ||
+               containEnemyPawn(row - 1, column + 1);
+    }
+}
+
+bool Board::isUnderKingAttack(std::size_t row, std::size_t column) const
+{
+    for (auto [offsetRow, offsetColumn] : neighborsOffset)
+    {
+        std::size_t currentRow = row + offsetRow;
+        std::size_t currentColumn = column + offsetColumn;
+        if (m_board[currentRow][currentColumn].getColor() ==
+                oppositeColor(m_sideToMove) &&
+            m_board[currentRow][currentColumn].getType() == PieceType::King)
+            return true;
+    }
+    return false;
 }

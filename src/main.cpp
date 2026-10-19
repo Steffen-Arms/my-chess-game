@@ -57,7 +57,7 @@ int main()
     // long amountOfNodes4 = perft_test(rookQueen, 1);
     // std::cout << "queen test 1: " << amountOfNodes4 << '\n';
 
-    Board rookKing{"rnbqkbnr/pppppppp/8/8/8/8/3K4/8 w KQkq - 0 1"};
+    Board rookKing{"rnbqkbnr/ppp1pppp/8/8/8/8/3K4/8 w KQkq - 0 1"};
     rookKing.print();
     std::cout << '\n';
     long amountOfNodes5 = perft_test(rookKing, 1);

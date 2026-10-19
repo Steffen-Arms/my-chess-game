@@ -10,10 +10,10 @@
 /////////////////////
 // start with the pawn
 //  Note that board_ref is not const as we have to add enPassage flag
-void addMovesOfOnePawn(const Piece& piece, const Board& board_ref, size_t row,
-                       size_t column, MoveList& moves)
+void addMovesOfOnePawn(const Board& board_ref, size_t row, size_t column,
+                       MoveList& moves)
 {
-    if (piece.getColor() == Color::White)
+    if (board_ref.getSideToMove() == Color::White)
     { // depending on the color of the pawn we specify if he is allow to
       // move 2 fields.
         if (row == 3 && board_ref.isEmptyField(row + 1, column) &&
@@ -21,8 +21,8 @@ void addMovesOfOnePawn(const Piece& piece, const Board& board_ref, size_t row,
         {
             // here we have to check if we bypass a enemy pawn and so activate
             // en passage
-            if (board_ref.containEnemyPawn(row + 2, column + 1, Color::White) ||
-                board_ref.containEnemyPawn(row + 2, column - 1, Color::White))
+            if (board_ref.containEnemyPawn(row + 2, column + 1) ||
+                board_ref.containEnemyPawn(row + 2, column - 1))
             {
                 // here we just store that this move create a en passage right.
                 // If we select this move later we will save this information to
@@ -62,7 +62,7 @@ void addMovesOfOnePawn(const Piece& piece, const Board& board_ref, size_t row,
 
             ///////////////////////////////////////////////////
             // now check if we can capture a piece to move one field diagonal
-            if (board_ref.containEnemyPiece(row + 1, column + 1, Color::White))
+            if (board_ref.containEnemyPiece(row + 1, column + 1))
             {
                 moves.push_back(Move{{row, column},
                                      {row + 1, column + 1},
@@ -81,7 +81,7 @@ void addMovesOfOnePawn(const Piece& piece, const Board& board_ref, size_t row,
                                      board_ref.getBoard()[row + 1][column + 1],
                                      Piece{Color::White, PieceType::Knight}});
             }
-            if (board_ref.containEnemyPiece(row + 1, column - 1, Color::White))
+            if (board_ref.containEnemyPiece(row + 1, column - 1))
             {
                 moves.push_back(Move{{row, column},
                                      {row + 1, column - 1},
@@ -110,14 +110,14 @@ void addMovesOfOnePawn(const Piece& piece, const Board& board_ref, size_t row,
             ////////////////
             // Add moves where we captur a other piece diagonal and are not on
             // the row 8
-            if (board_ref.containEnemyPiece(row + 1, column + 1, Color::White))
+            if (board_ref.containEnemyPiece(row + 1, column + 1))
             {
                 moves.push_back(
                     Move{{row, column},
                          {row + 1, column + 1},
                          board_ref.getBoard()[row + 1][column + 1]});
             }
-            if (board_ref.containEnemyPiece(row + 1, column - 1, Color::White))
+            if (board_ref.containEnemyPiece(row + 1, column - 1))
             {
                 moves.push_back(
                     Move{{row, column},
@@ -153,8 +153,8 @@ void addMovesOfOnePawn(const Piece& piece, const Board& board_ref, size_t row,
         {
             // here we have to check if we bypass a enemy pawn and so activate
             // en passage
-            if (board_ref.containEnemyPawn(row - 2, column + 1, Color::Black) ||
-                board_ref.containEnemyPawn(row - 2, column - 1, Color::Black))
+            if (board_ref.containEnemyPawn(row - 2, column + 1) ||
+                board_ref.containEnemyPawn(row - 2, column - 1))
             {
                 // here we just store that this move create a en passage right.
                 // If we select this move later we will save this information to
@@ -195,7 +195,7 @@ void addMovesOfOnePawn(const Piece& piece, const Board& board_ref, size_t row,
 
             ///////////////////////////////////////////////////
             // now check if we can capture a piece to move one field diagonal
-            if (board_ref.containEnemyPiece(row - 1, column + 1, Color::Black))
+            if (board_ref.containEnemyPiece(row - 1, column + 1))
             {
                 moves.push_back(Move{{row, column},
                                      {row - 1, column + 1},
@@ -214,7 +214,7 @@ void addMovesOfOnePawn(const Piece& piece, const Board& board_ref, size_t row,
                                      board_ref.getBoard()[row - 1][column + 1],
                                      Piece{Color::Black, PieceType::Knight}});
             }
-            if (board_ref.containEnemyPiece(row - 1, column - 1, Color::White))
+            if (board_ref.containEnemyPiece(row - 1, column - 1))
             {
                 moves.push_back(Move{{row, column},
                                      {row - 1, column - 1},
@@ -245,14 +245,14 @@ void addMovesOfOnePawn(const Piece& piece, const Board& board_ref, size_t row,
             ////////////////
             // Add moves where we captur a other piece diagonal and are not on
             // the row 3
-            if (board_ref.containEnemyPiece(row - 1, column + 1, Color::Black))
+            if (board_ref.containEnemyPiece(row - 1, column + 1))
             {
                 moves.push_back(
                     Move{{row, column},
                          {row - 1, column + 1},
                          board_ref.getBoard()[row - 1][column + 1]});
             }
-            if (board_ref.containEnemyPiece(row - 1, column - 1, Color::Black))
+            if (board_ref.containEnemyPiece(row - 1, column - 1))
             {
                 moves.push_back(
                     Move{{row, column},
@@ -279,10 +279,9 @@ void addMovesOfOnePawn(const Piece& piece, const Board& board_ref, size_t row,
 
 /////////////////////
 // define moves for the rook
-void addMovesOfOneRook(const Piece& piece, const Board& board_ref, size_t row,
-                       size_t column, MoveList& moves)
+void addMovesOfOneRook(const Board& board_ref, size_t row, size_t column,
+                       MoveList& moves)
 {
-    Color ownColor = piece.getColor();
 
     // first we find all moves horizontal right to the rook
     std::size_t nextColumn{column + 1};
@@ -291,7 +290,7 @@ void addMovesOfOneRook(const Piece& piece, const Board& board_ref, size_t row,
         moves.push_back(Move{{row, column}, {row, nextColumn}});
         ++nextColumn;
     }
-    if (board_ref.containEnemyPiece(row, nextColumn, ownColor))
+    if (board_ref.containEnemyPiece(row, nextColumn))
     {
         moves.push_back(Move{{row, column},
                              {row, nextColumn},
@@ -305,7 +304,7 @@ void addMovesOfOneRook(const Piece& piece, const Board& board_ref, size_t row,
         moves.push_back(Move{{row, column}, {row, nextColumn}});
         --nextColumn;
     }
-    if (board_ref.containEnemyPiece(row, nextColumn, ownColor))
+    if (board_ref.containEnemyPiece(row, nextColumn))
     {
         moves.push_back(Move{{row, column},
                              {row, nextColumn},
@@ -319,7 +318,7 @@ void addMovesOfOneRook(const Piece& piece, const Board& board_ref, size_t row,
         moves.push_back(Move{{row, column}, {nextRow, column}});
         ++nextRow;
     }
-    if (board_ref.containEnemyPiece(nextRow, column, ownColor))
+    if (board_ref.containEnemyPiece(nextRow, column))
     {
         moves.push_back(Move{{row, column},
                              {row, nextColumn},
@@ -333,7 +332,7 @@ void addMovesOfOneRook(const Piece& piece, const Board& board_ref, size_t row,
         moves.push_back(Move{{row, column}, {nextRow, column}});
         --nextRow;
     }
-    if (board_ref.containEnemyPiece(nextRow, column, ownColor))
+    if (board_ref.containEnemyPiece(nextRow, column))
     {
         moves.push_back(Move{{row, column},
                              {row, nextColumn},
@@ -343,17 +342,16 @@ void addMovesOfOneRook(const Piece& piece, const Board& board_ref, size_t row,
 
 /////////////////////
 // define moves for the Knight
-void addMovesOfOneKnight(const Piece& piece, const Board& board_ref, size_t row,
-                         size_t column, MoveList& moves)
+void addMovesOfOneKnight(const Board& board_ref, size_t row, size_t column,
+                         MoveList& moves)
 {
-    Color ownColor = piece.getColor();
 
     // the knight has 8 possible moves
     if (board_ref.isEmptyField(row + 2, column + 1))
     {
         moves.push_back(Move{{row, column}, {row + 2, column + 1}});
     }
-    else if (board_ref.containEnemyPawn(row + 2, column + 1, ownColor))
+    else if (board_ref.containEnemyPawn(row + 2, column + 1))
     {
         moves.push_back(Move{{row, column},
                              {row + 2, column + 1},
@@ -364,7 +362,7 @@ void addMovesOfOneKnight(const Piece& piece, const Board& board_ref, size_t row,
     {
         moves.push_back(Move{{row, column}, {row + 1, column + 2}});
     }
-    else if (board_ref.containEnemyPiece(row + 1, column + 2, ownColor))
+    else if (board_ref.containEnemyPiece(row + 1, column + 2))
     {
         moves.push_back(Move{{row, column},
                              {row + 1, column + 2},
@@ -375,7 +373,7 @@ void addMovesOfOneKnight(const Piece& piece, const Board& board_ref, size_t row,
     {
         moves.push_back(Move{{row, column}, {row - 1, column + 2}});
     }
-    else if (board_ref.containEnemyPiece(row - 1, column + 2, ownColor))
+    else if (board_ref.containEnemyPiece(row - 1, column + 2))
     {
         moves.push_back(Move{{row, column},
                              {row - 1, column + 2},
@@ -386,7 +384,7 @@ void addMovesOfOneKnight(const Piece& piece, const Board& board_ref, size_t row,
     {
         moves.push_back(Move{{row, column}, {row - 2, column + 1}});
     }
-    else if (board_ref.containEnemyPiece(row - 2, column + 1, ownColor))
+    else if (board_ref.containEnemyPiece(row - 2, column + 1))
     {
         moves.push_back(Move{{row, column},
                              {row - 2, column + 1},
@@ -397,7 +395,7 @@ void addMovesOfOneKnight(const Piece& piece, const Board& board_ref, size_t row,
     {
         moves.push_back(Move{{row, column}, {row - 2, column - 1}});
     }
-    else if (board_ref.containEnemyPiece(row - 2, column - 1, ownColor))
+    else if (board_ref.containEnemyPiece(row - 2, column - 1))
     {
         moves.push_back(Move{{row, column},
                              {row - 2, column - 1},
@@ -408,7 +406,7 @@ void addMovesOfOneKnight(const Piece& piece, const Board& board_ref, size_t row,
     {
         moves.push_back(Move{{row, column}, {row - 1, column - 2}});
     }
-    else if (board_ref.containEnemyPiece(row - 1, column - 2, ownColor))
+    else if (board_ref.containEnemyPiece(row - 1, column - 2))
     {
         moves.push_back(Move{{row, column},
                              {row - 1, column - 2},
@@ -419,7 +417,7 @@ void addMovesOfOneKnight(const Piece& piece, const Board& board_ref, size_t row,
     {
         moves.push_back(Move{{row, column}, {row + 1, column - 2}});
     }
-    else if (board_ref.containEnemyPiece(row + 1, column - 2, ownColor))
+    else if (board_ref.containEnemyPiece(row + 1, column - 2))
     {
         moves.push_back(Move{{row, column},
                              {row + 1, column - 2},
@@ -430,7 +428,7 @@ void addMovesOfOneKnight(const Piece& piece, const Board& board_ref, size_t row,
     {
         moves.push_back(Move{{row, column}, {row + 2, column - 1}});
     }
-    else if (board_ref.containEnemyPiece(row + 2, column - 1, ownColor))
+    else if (board_ref.containEnemyPiece(row + 2, column - 1))
     {
         moves.push_back(Move{{row, column},
                              {row + 2, column - 1},
@@ -440,10 +438,9 @@ void addMovesOfOneKnight(const Piece& piece, const Board& board_ref, size_t row,
 
 /////////////////////
 // define moves for the bishop
-void addMovesOfOneBishop(const Piece& piece, const Board& board_ref, size_t row,
-                         size_t column, MoveList& moves)
+void addMovesOfOneBishop(const Board& board_ref, size_t row, size_t column,
+                         MoveList& moves)
 {
-    Color ownColor = piece.getColor();
     // now we find all moves diagonal upper right
     std::size_t nextRow = row + 1;
     std::size_t nextColumn = column + 1;
@@ -453,7 +450,7 @@ void addMovesOfOneBishop(const Piece& piece, const Board& board_ref, size_t row,
         ++nextRow;
         ++nextColumn;
     }
-    if (board_ref.containEnemyPiece(nextRow, nextColumn, ownColor))
+    if (board_ref.containEnemyPiece(nextRow, nextColumn))
     {
         moves.push_back(Move{{row, column},
                              {row, nextColumn},
@@ -469,7 +466,7 @@ void addMovesOfOneBishop(const Piece& piece, const Board& board_ref, size_t row,
         --nextRow;
         ++nextColumn;
     }
-    if (board_ref.containEnemyPiece(nextRow, nextColumn, ownColor))
+    if (board_ref.containEnemyPiece(nextRow, nextColumn))
     {
         moves.push_back(Move{{row, column},
                              {row, nextColumn},
@@ -485,7 +482,7 @@ void addMovesOfOneBishop(const Piece& piece, const Board& board_ref, size_t row,
         --nextRow;
         --nextColumn;
     }
-    if (board_ref.containEnemyPiece(nextRow, nextColumn, ownColor))
+    if (board_ref.containEnemyPiece(nextRow, nextColumn))
     {
         moves.push_back(Move{{row, column},
                              {row, nextColumn},
@@ -501,7 +498,7 @@ void addMovesOfOneBishop(const Piece& piece, const Board& board_ref, size_t row,
         ++nextRow;
         --nextColumn;
     }
-    if (board_ref.containEnemyPiece(nextRow, nextColumn, ownColor))
+    if (board_ref.containEnemyPiece(nextRow, nextColumn))
     {
         moves.push_back(Move{{row, column},
                              {row, nextColumn},
@@ -511,182 +508,117 @@ void addMovesOfOneBishop(const Piece& piece, const Board& board_ref, size_t row,
 
 /////////////////////
 // define moves for the rook
-void addMovesOfOneQueen(const Piece& piece, const Board& board_ref, size_t row,
-                        size_t column, MoveList& moves)
+void addMovesOfOneQueen(const Board& board_ref, size_t row, size_t column,
+                        MoveList& moves)
 {
     // as the queen is the combination of rook and bishop we can reuse their
     // code here
-    addMovesOfOneRook(piece, board_ref, row, column, moves);
-    addMovesOfOneBishop(piece, board_ref, row, column, moves);
+    addMovesOfOneRook(board_ref, row, column, moves);
+    addMovesOfOneBishop(board_ref, row, column, moves);
 }
 
 // Add a move if we don't hit a boundary
-void addMoveIfaField(Color ownColor, const Board& board_ref, size_t row,
-                     size_t column, size_t nextRow, size_t nextColumn,
-                     MoveList& moves)
-{
-    if (board_ref.isEmptyField(nextRow, nextColumn))
-    {
-        moves.push_back(Move{{row, column}, {nextRow, nextColumn}});
-    }
-    else if (board_ref.containEnemyPiece(nextRow, nextColumn, ownColor))
-    {
-        moves.push_back(Move{{row, column},
-                             {nextRow, nextColumn},
-                             board_ref.getBoard()[nextRow][nextColumn]});
-    }
-}
-
-bool fieldIsUnderOrthogonalAttack(const Board& board_ref, std::size_t row,
-                                  std::size_t column)
-{
-    // We check for each direction the next field that is not empty. Then we
-    // check if it contain a dangerous enemy piece.
-    Color ownColor = board_ref.getSideToMove();
-    std::size_t nextColumn = column + 1;
-    while (board_ref.isEmptyField(row, nextColumn))
-    {
-        ++nextColumn;
-    }
-    if (board_ref.containOrthogonalEnemy(row, nextColumn, ownColor))
-    {
-        return true;
-    }
-    nextColumn = column - 1;
-    while (board_ref.isEmptyField(row, nextColumn))
-    {
-        --nextColumn;
-    }
-    if (board_ref.containOrthogonalEnemy(row, nextColumn, ownColor))
-    {
-        return true;
-    }
-
-    std::size_t nextRow = row + 1;
-    while ((board_ref.isEmptyField(nextRow, column)))
-    {
-        ++nextRow;
-    }
-    if (board_ref.containOrthogonalEnemy(nextRow, column, ownColor))
-    {
-        return true;
-    }
-    nextRow = row - 1;
-    while (board_ref.containOrthogonalEnemy(nextRow, column, ownColor))
-    {
-        --nextRow;
-    }
-    if (board_ref.containOrthogonalEnemy(nextRow, column, ownColor))
-    {
-        return true;
-    }
-
-    // if we dont find orthogonal enemies we return false
-    return false;
-}
-
-bool fieldIsUnderDiagonalAttack(const Board& board_ref, std::size_t row,
-                                std::size_t column)
-{
-    Color ownColor = board_ref.getSideToMove();
-    std::size_t nextRow = row + 1;
-    std::size_t nextColumn = column + 1;
-
-    while (board_ref.isEmptyField(nextRow, nextColumn))
-    {
-        ++nextRow;
-        ++nextColumn;
-    }
-    if (board_ref.containDiagonalEnemy(nextRow, nextColumn, ownColor))
-        return true;
-
-    nextRow = row - 1;
-    nextColumn = column - 1;
-    while ((board_ref.isEmptyField(nextRow, nextColumn)))
-    {
-        --nextRow;
-        --nextColumn;
-    }
-    if (board_ref.containDiagonalEnemy(nextRow, nextColumn, ownColor))
-        return true;
-
-    nextRow = row + 1;
-    nextColumn = column - 1;
-    while (board_ref.isEmptyField(nextRow, nextColumn))
-    {
-        ++nextRow;
-        --nextColumn;
-    }
-    if (board_ref.containDiagonalEnemy(nextRow, nextColumn, ownColor))
-        return true;
-
-    nextRow = row - 1;
-    nextColumn = column + 1;
-    while (board_ref.isEmptyField(nextRow, nextColumn))
-    {
-        --nextRow;
-        ++nextColumn;
-    }
-    if (board_ref.containDiagonalEnemy(nextRow, nextColumn, ownColor))
-        return true;
-
-    // if we don't find diagonal enemies we return false
-    return false;
-}
-
-// return true if a piece of the enemy attack this field right now.
-bool fieldIsUnderAttack(const Board& board_ref, std::size_t row,
-                        std::size_t column)
+void addOneMoveForTheKing(Board& board_ref, size_t row, size_t column,
+                          size_t nextRow, size_t nextColumn, MoveList& moves)
 {
 
-    // First we check for orthogonal enemies
-    if (fieldIsUnderOrthogonalAttack(board_ref, row, column))
-        return true;
+    // Todo: is there a more elegant way for this?
 
-    // now we check for diagonal enemies
-    if (fieldIsUnderDiagonalAttack(board_ref, row, column))
-        return true;
+    // we have to check if the king is under attack after he make the
+    // move.
+    // It's possible that the king itself block a field so that the
+    // field before was not under attack. So thats why we have to
+    // simulate the move here.
+    Move testMove = Move{{row, column}, {nextRow, nextColumn}};
+    board_ref.makeTestMove(testMove);
+
+    // with the king we have the special rule that the king can't move to a
+    // field if he then is under attack.
+    if (!board_ref.fieldIsUnderAttack(nextRow, nextColumn))
+    {
+        board_ref.undoTestMove(testMove);
+        if (board_ref.isEmptyField(nextRow, nextColumn))
+        {
+            moves.push_back(testMove);
+        }
+        else if (board_ref.containEnemyPiece(nextRow, nextColumn))
+        {
+            moves.push_back(Move{{row, column},
+                                 {nextRow, nextColumn},
+                                 board_ref.getBoard()[nextRow][nextColumn]});
+        }
+    }
+    else
+    {
+        board_ref.undoTestMove(testMove);
+    }
 }
 
 // Note: here we don't check if the king is in check.
-void addMovesOfOneKing(const Piece& piece, const Board& board_ref, size_t row,
-                       size_t column, MoveList& moves)
+void addMovesOfOneKing(Board& board_ref, size_t row, size_t column,
+                       MoveList& moves)
 {
-    Color ownColor = piece.getColor();
 
-    addMoveIfaField(ownColor, board_ref, row, column, row + 1, column, moves);
-    addMoveIfaField(ownColor, board_ref, row, column, row + 1, column + 1,
-                    moves);
-    addMoveIfaField(ownColor, board_ref, row, column, row, column + 1, moves);
-    addMoveIfaField(ownColor, board_ref, row, column, row - 1, column + 1,
-                    moves);
-    addMoveIfaField(ownColor, board_ref, row, column, row - 1, column, moves);
-    addMoveIfaField(ownColor, board_ref, row, column, row - 1, column - 1,
-                    moves);
-    addMoveIfaField(ownColor, board_ref, row, column, row, column - 1, moves);
-    addMoveIfaField(ownColor, board_ref, row, column, row + 1, column - 1,
-                    moves);
+    // here we add the moves with one step with the king.
+    for (auto [offsetRow, offsetColumn] : neighborsOffset)
+    {
+        std::size_t currentRow = row + offsetRow;
+        std::size_t currentColumn = column + offsetColumn;
+        addOneMoveForTheKing(board_ref, row, column, currentRow, currentColumn,
+                             moves);
+    }
 
     // Here we handle the rochade
     std::array<bool, 4> castleArray = board_ref.getCastleKing();
-    if (ownColor == Color::White)
+    if (board_ref.getSideToMove() == Color::White)
     {
         // make sure the rochade is still allowed on this side.
         // all field between the king and rook are empty
-        // all field the king pass should not be under attack
+        // all field the king pass should not be under attack. The king
+        // itself is not under attack.
         if (castleArray[0] && board_ref.isEmptyField(2, 7) &&
-            board_ref.isEmptyField(2, 8))
+            board_ref.isEmptyField(2, 8) &&
+            !board_ref.fieldIsUnderAttack(2, 6) &&
+            !board_ref.fieldIsUnderAttack(2, 7) &&
+            !board_ref.fieldIsUnderAttack(2, 8))
         {
             moves.push_back(Move{{row, column}, {2, 8}});
+        }
+        if (castleArray[1] && board_ref.isEmptyField(2, 3) &&
+            board_ref.isEmptyField(2, 4) && board_ref.isEmptyField(2, 4) &&
+            !board_ref.fieldIsUnderAttack(2, 6) &&
+            !board_ref.fieldIsUnderAttack(2, 5) &&
+            !board_ref.fieldIsUnderAttack(2, 4))
+        {
+            moves.push_back(Move{{row, column}, {2, 4}});
+        }
+    }
+    else
+    {
+        if (castleArray[2] && board_ref.isEmptyField(9, 7) &&
+            board_ref.isEmptyField(9, 8) &&
+            !board_ref.fieldIsUnderAttack(9, 6) &&
+            !board_ref.fieldIsUnderAttack(9, 7) &&
+            !board_ref.fieldIsUnderAttack(9, 8))
+        {
+            moves.push_back(Move{{row, column}, {9, 8}});
+        }
+        if (castleArray[3] && board_ref.isEmptyField(9, 5) &&
+            board_ref.isEmptyField(9, 4) && board_ref.isEmptyField(9, 3) &&
+            !board_ref.fieldIsUnderAttack(9, 6) &&
+            !board_ref.fieldIsUnderAttack(9, 5) &&
+            !board_ref.fieldIsUnderAttack(9, 4))
+        {
+            moves.push_back(Move{{row, column}, {9, 4}});
         }
     }
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // Note "moves" is a out parameter
-// In this method we orcestrate which function we have to call depending on the
-// piece type.
-void addMovesOfOnePiece(const Piece& piece, const Board& board_ref, size_t row,
+// In this method we orcestrate which function we have to call depending on
+// the piece type.
+void addMovesOfOnePiece(const Piece& piece, Board& board_ref, size_t row,
                         size_t column, MoveList& moves)
 {
     // note we don't get of the array index as we have the 2 field thick
@@ -699,22 +631,22 @@ void addMovesOfOnePiece(const Piece& piece, const Board& board_ref, size_t row,
     switch (piece.getType())
     {
     case PieceType::Pawn:
-        addMovesOfOnePawn(piece, board_ref, row, column, moves);
+        addMovesOfOnePawn(board_ref, row, column, moves);
         break;
     case PieceType::Rook:
-        addMovesOfOneRook(piece, board_ref, row, column, moves);
+        addMovesOfOneRook(board_ref, row, column, moves);
         break;
     case PieceType::Knight:
-        addMovesOfOneKnight(piece, board_ref, row, column, moves);
+        addMovesOfOneKnight(board_ref, row, column, moves);
         break;
     case PieceType::Bishop:
-        addMovesOfOneBishop(piece, board_ref, row, column, moves);
+        addMovesOfOneBishop(board_ref, row, column, moves);
         break;
     case PieceType::Queen:
-        addMovesOfOneQueen(piece, board_ref, row, column, moves);
+        addMovesOfOneQueen(board_ref, row, column, moves);
         break;
     case PieceType::King:
-        addMovesOfOneKing(piece, board_ref, row, column, moves);
+        addMovesOfOneKing(board_ref, row, column, moves);
         break;
     default:
         assert("Move generation: didn't find correct piece");
@@ -723,10 +655,10 @@ void addMovesOfOnePiece(const Piece& piece, const Board& board_ref, size_t row,
 }
 
 // We will generate a vector of all possible next moves of a given board
-// We implement the "legal" approach, so only return moves so the king wont be
-// in check. For this we first search for each move and check if after that move
-// the king is in check.
-MoveList generateMoves(const Board& board)
+// We implement the "legal" approach, so only return moves so the king wont
+// be in check. For this we first search for each move and check if after
+// that move the king is in check.
+MoveList generateMoves(Board& board)
 {
     MoveList moves;
 
