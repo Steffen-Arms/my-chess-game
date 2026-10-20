@@ -16,7 +16,9 @@ struct Move
     Coord to;
     Piece capturePiece = Piece{};
     Piece transform = Piece{};
-    bool enPassage = false; // is true if this move create a enPassage right
+    bool createEnPassageRight =
+        false; // is true if this move create a enPassage right
+    bool isEnPassage = false;
 };
 
 // We need a data structur so we can access the last element of a array.
@@ -29,10 +31,15 @@ struct MoveList
     std::size_t index{0};
 
     // this is analog to the push_back function of a vector
-    void push_back(const Move& newMove)
+    // in this function we check if the move is valid in that sense that the own
+    // king is not in check after the move.
+    void push_back(const Move& newMove, Board& board_ref)
     {
         assert(index < move_list.size());
-        move_list[index++] = newMove;
+        if (!board_ref.kingInCheckAfterMove(newMove))
+        {
+            move_list[index++] = newMove;
+        }
     }
 
     void clear() { index = 0; }

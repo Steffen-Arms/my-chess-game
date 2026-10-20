@@ -148,11 +148,13 @@ class Board
     bool isUnderKnightAttack(std::size_t row, std::size_t column) const;
     bool fieldContainEnemyKnight(std::size_t row, std::size_t column) const;
     bool fieldIsUnderAttack(std::size_t row, std::size_t column) const;
+    bool fieldIsUnderAttack(Coord fieldCoord) const;
     bool fieldIsUnderOrthogonalAttack(std::size_t row,
                                       std::size_t column) const;
     bool fieldIsUnderDiagonalAttack(std::size_t row, std::size_t column) const;
     bool isUnderPawnAttack(std::size_t row, std::size_t column) const;
     bool isUnderKingAttack(std::size_t row, std::size_t column) const;
+    bool kingInCheckAfterMove(Move newMove);
 
     void makeTestMove(Move move);
     void undoTestMove(Move move);
@@ -160,8 +162,8 @@ class Board
     // For testing purposes.
     void print() const;
 
-    void setEnPassant(Coord coord) { m_enPassant = coord; }
-    std::optional<Coord> getEnPassant() const { return m_enPassant; }
+    void setEnPassant(Coord coord) { m_enPassantField = coord; }
+    std::optional<Coord> getEnPassant() const { return m_enPassantField; }
 
     void makeMove(Move);
     void undoMove(Move);
@@ -191,6 +193,12 @@ class Board
         m_castleKing[index] = value;
     }
 
+    void setWhiteKing(Coord newCoord) { m_whiteKing = newCoord; }
+    Coord getWhiteKing() { return m_whiteKing; }
+
+    void setBlackKing(Coord newCoord) { m_blackKing = newCoord; }
+    Coord getBlackKing() { return m_blackKing; }
+
   private:
     // Naive implementation: a 12x12 array with a 2-square border around the
     // 8x8 field, which makes checking for valid moves easier.
@@ -199,13 +207,16 @@ class Board
     Color m_sideToMove;
     int m_halfMoves; // counted for the 50-move rule
     int m_fullMoves;
+    Coord m_whiteKing; // as we need to check after each move if the king is in
+                       // check, we save the position of the kings seperate.
+    Coord m_blackKing;
 
     // Note we only store a coordinate for enPassant. It is possible that the
     // enemy pawn capture en passant from both side.
     // Because the enPassant rule only count for the next half round this wont
     // grant enpassant right to other pawn.
-    std::optional<Coord> m_enPassant; // square where an en passant capture is
-                                      // possible; empty if none
+    std::optional<Coord> m_enPassantField; // square where an en passant capture
+                                           // is possible; empty if none
 
     // Castling rights per color and side.
     // position 0 is for white king side, position 1 is for white queen side

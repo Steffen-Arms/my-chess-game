@@ -8,9 +8,36 @@
 // seperatly.
 
 /////////////////////
+
+void addTransformingPawnMoves(Color ownColor, std::size_t row,
+                              std::size_t column, std::size_t nextRow,
+                              std::size_t nextColumn, MoveList& moves,
+                              Board& board_ref)
+{
+    moves.push_back(Move{{row, column},
+                         {nextRow, nextColumn},
+                         board_ref.getBoard()[nextRow][nextColumn],
+                         Piece{ownColor, PieceType::Queen}},
+                    board_ref);
+    moves.push_back(Move{{row, column},
+                         {nextRow, nextColumn},
+                         board_ref.getBoard()[nextRow][nextColumn],
+                         Piece{ownColor, PieceType::Rook}},
+                    board_ref);
+    moves.push_back(Move{{row, column},
+                         {nextRow, nextColumn},
+                         board_ref.getBoard()[nextRow][nextColumn],
+                         Piece{ownColor, PieceType::Bishop}},
+                    board_ref);
+    moves.push_back(Move{{row, column},
+                         {nextRow, nextColumn},
+                         board_ref.getBoard()[nextRow][nextColumn],
+                         Piece{ownColor, PieceType::Knight}},
+                    board_ref);
+}
 // start with the pawn
 //  Note that board_ref is not const as we have to add enPassage flag
-void addMovesOfOnePawn(const Board& board_ref, size_t row, size_t column,
+void addMovesOfOnePawn(Board& board_ref, size_t row, size_t column,
                        MoveList& moves)
 {
     if (board_ref.getSideToMove() == Color::White)
@@ -30,99 +57,63 @@ void addMovesOfOnePawn(const Board& board_ref, size_t row, size_t column,
                 moves.push_back(Move{{row, column},
                                      {row + 2, column},
                                      Piece{},
-                                     Piece{Color::Black, PieceType::Pawn},
-                                     true});
+                                     Piece{},
+                                     true},
+                                board_ref);
             }
             else
             {
-                moves.push_back(Move{{row, column}, {row + 2, column}});
+                moves.push_back(Move{{row, column}, {row + 2, column}},
+                                board_ref);
             }
         }
-        if (row == 8 && board_ref.isEmptyField(row, column + 1))
-        { // in this case the pawn reach the other side and can transform to
-          // a queen, knight, bishop or rook
-            // Even it make little sense to transform the Pawn to a Bishop
-            // or rook we will keep it as a option to reflect the rules.
-            moves.push_back(Move{{row, column},
-                                 {row + 1, column},
-                                 Piece{},
-                                 Piece{Color::White, PieceType::Queen}});
-            moves.push_back(Move{{row, column},
-                                 {row + 1, column},
-                                 Piece{},
-                                 Piece{Color::White, PieceType::Rook}});
-            moves.push_back(Move{{row, column},
-                                 {row + 1, column},
-                                 Piece{},
-                                 Piece{Color::White, PieceType::Bishop}});
-            moves.push_back(Move{{row, column},
-                                 {row + 1, column},
-                                 Piece{},
-                                 Piece{Color::White, PieceType::Knight}});
-
+        if (row == 8)
+        {
+            if (board_ref.isEmptyField(row + 1, column))
+            {
+                // in this case the pawn reach the other side and can transform
+                // to a queen, knight, bishop or rook
+                // Even it make little sense to transform the Pawn to a Bishop
+                // or rook we will keep it as a option to reflect the rules.
+                addTransformingPawnMoves(Color::White, row, column, row + 1,
+                                         column, moves, board_ref);
+            }
             ///////////////////////////////////////////////////
             // now check if we can capture a piece to move one field diagonal
             if (board_ref.containEnemyPiece(row + 1, column + 1))
             {
-                moves.push_back(Move{{row, column},
-                                     {row + 1, column + 1},
-                                     board_ref.getBoard()[row + 1][column + 1],
-                                     Piece{Color::White, PieceType::Queen}});
-                moves.push_back(Move{{row, column},
-                                     {row + 1, column + 1},
-                                     board_ref.getBoard()[row + 1][column + 1],
-                                     Piece{Color::White, PieceType::Rook}});
-                moves.push_back(Move{{row, column},
-                                     {row + 1, column + 1},
-                                     board_ref.getBoard()[row + 1][column + 1],
-                                     Piece{Color::White, PieceType::Bishop}});
-                moves.push_back(Move{{row, column},
-                                     {row + 1, column + 1},
-                                     board_ref.getBoard()[row + 1][column + 1],
-                                     Piece{Color::White, PieceType::Knight}});
+                addTransformingPawnMoves(Color::White, row, column, row + 1,
+                                         column + 1, moves, board_ref);
             }
             if (board_ref.containEnemyPiece(row + 1, column - 1))
             {
-                moves.push_back(Move{{row, column},
-                                     {row + 1, column - 1},
-                                     board_ref.getBoard()[row + 1][column + 1],
-                                     Piece{Color::White, PieceType::Queen}});
-                moves.push_back(Move{{row, column},
-                                     {row + 1, column - 1},
-                                     board_ref.getBoard()[row + 1][column + 1],
-                                     Piece{Color::White, PieceType::Rook}});
-                moves.push_back(Move{{row, column},
-                                     {row + 1, column - 1},
-                                     board_ref.getBoard()[row + 1][column + 1],
-                                     Piece{Color::White, PieceType::Bishop}});
-                moves.push_back(Move{{row, column},
-                                     {row + 1, column - 1},
-                                     board_ref.getBoard()[row + 1][column + 1],
-                                     Piece{Color::White, PieceType::Knight}});
+                addTransformingPawnMoves(Color::White, row, column, row + 1,
+                                         column - 1, moves, board_ref);
             }
         }
         if (row < 8)
         {
             if (board_ref.isEmptyField(row + 1, column))
             {
-                moves.push_back(Move{{row, column}, {row + 1, column}});
+                moves.push_back(Move{{row, column}, {row + 1, column}},
+                                board_ref);
             }
             ////////////////
             // Add moves where we captur a other piece diagonal and are not on
             // the row 8
             if (board_ref.containEnemyPiece(row + 1, column + 1))
             {
-                moves.push_back(
-                    Move{{row, column},
-                         {row + 1, column + 1},
-                         board_ref.getBoard()[row + 1][column + 1]});
+                moves.push_back(Move{{row, column},
+                                     {row + 1, column + 1},
+                                     board_ref.getBoard()[row + 1][column + 1]},
+                                board_ref);
             }
             if (board_ref.containEnemyPiece(row + 1, column - 1))
             {
-                moves.push_back(
-                    Move{{row, column},
-                         {row + 1, column - 1},
-                         board_ref.getBoard()[row + 1][column - 1]});
+                moves.push_back(Move{{row, column},
+                                     {row + 1, column - 1},
+                                     board_ref.getBoard()[row + 1][column - 1]},
+                                board_ref);
             }
         }
 
@@ -132,11 +123,23 @@ void addMovesOfOnePawn(const Board& board_ref, size_t row, size_t column,
             // en passage to the right or left
             if (board_ref.getEnPassant() == Coord{row + 1, column - 1})
             {
-                moves.push_back(Move{{row, column}, {row + 1, column - 1}});
+                moves.push_back(Move{{row, column},
+                                     {row + 1, column - 1},
+                                     board_ref.getBoard()[row][column - 1],
+                                     Piece{},
+                                     false,
+                                     true},
+                                board_ref);
             }
             if (board_ref.getEnPassant() == Coord{row + 1, column + 1})
             {
-                moves.push_back(Move{{row, column}, {row + 1, column + 1}});
+                moves.push_back(Move{{row, column},
+                                     {row + 1, column + 1},
+                                     board_ref.getBoard()[row][column + 1],
+                                     Piece{},
+                                     false,
+                                     true},
+                                board_ref);
             }
         }
     }
@@ -162,76 +165,39 @@ void addMovesOfOnePawn(const Board& board_ref, size_t row, size_t column,
                 moves.push_back(Move{{row, column},
                                      {row - 2, column},
                                      Piece{},
-                                     Piece{Color::White, PieceType::Pawn},
-                                     true});
+                                     Piece{},
+                                     true},
+                                board_ref);
             }
             else
             {
-                moves.push_back(Move{{row, column}, {row - 2, column}});
+                moves.push_back(Move{{row, column}, {row - 2, column}},
+                                board_ref);
             }
         }
 
-        if (row == 3 && board_ref.isEmptyField(row, column - 1))
+        if (row == 3)
         { // in this case the pawn reach the other side and can transform to
           // a queen, knight, bishop or rook
             // Even it make little sense to transform the Pawn to a Bishop
             // or rook we will keep it as a option to reflect the rules.
-            moves.push_back(Move{{row, column},
-                                 {row - 1, column},
-                                 Piece{},
-                                 Piece{Color::Black, PieceType::Queen}});
-            moves.push_back(Move{{row, column},
-                                 {row - 1, column},
-                                 Piece{},
-                                 Piece{Color::Black, PieceType::Rook}});
-            moves.push_back(Move{{row, column},
-                                 {row - 1, column},
-                                 Piece{},
-                                 Piece{Color::Black, PieceType::Bishop}});
-            moves.push_back(Move{{row, column},
-                                 {row - 1, column},
-                                 Piece{},
-                                 Piece{Color::Black, PieceType::Knight}});
+            if (board_ref.isEmptyField(row - 1, column))
+            {
+                addTransformingPawnMoves(Color::Black, row, column, row - 1,
+                                         column, moves, board_ref);
+            }
 
             ///////////////////////////////////////////////////
             // now check if we can capture a piece to move one field diagonal
             if (board_ref.containEnemyPiece(row - 1, column + 1))
             {
-                moves.push_back(Move{{row, column},
-                                     {row - 1, column + 1},
-                                     board_ref.getBoard()[row - 1][column + 1],
-                                     Piece{Color::Black, PieceType::Queen}});
-                moves.push_back(Move{{row, column},
-                                     {row - 1, column + 1},
-                                     board_ref.getBoard()[row - 1][column + 1],
-                                     Piece{Color::Black, PieceType::Rook}});
-                moves.push_back(Move{{row, column},
-                                     {row - 1, column + 1},
-                                     board_ref.getBoard()[row - 1][column + 1],
-                                     Piece{Color::Black, PieceType::Bishop}});
-                moves.push_back(Move{{row, column},
-                                     {row - 1, column + 1},
-                                     board_ref.getBoard()[row - 1][column + 1],
-                                     Piece{Color::Black, PieceType::Knight}});
+                addTransformingPawnMoves(Color::Black, row, column, row - 1,
+                                         column + 1, moves, board_ref);
             }
             if (board_ref.containEnemyPiece(row - 1, column - 1))
             {
-                moves.push_back(Move{{row, column},
-                                     {row - 1, column - 1},
-                                     board_ref.getBoard()[row - 1][column + 1],
-                                     Piece{Color::Black, PieceType::Queen}});
-                moves.push_back(Move{{row, column},
-                                     {row - 1, column - 1},
-                                     board_ref.getBoard()[row - 1][column + 1],
-                                     Piece{Color::Black, PieceType::Rook}});
-                moves.push_back(Move{{row, column},
-                                     {row - 1, column - 1},
-                                     board_ref.getBoard()[row - 1][column + 1],
-                                     Piece{Color::Black, PieceType::Bishop}});
-                moves.push_back(Move{{row, column},
-                                     {row - 1, column - 1},
-                                     board_ref.getBoard()[row - 1][column + 1],
-                                     Piece{Color::Black, PieceType::Knight}});
+                addTransformingPawnMoves(Color::Black, row, column, row - 1,
+                                         column - 1, moves, board_ref);
             }
         }
 
@@ -240,24 +206,25 @@ void addMovesOfOnePawn(const Board& board_ref, size_t row, size_t column,
         {
             if (board_ref.isEmptyField(row - 1, column))
             {
-                moves.push_back(Move{{row, column}, {row - 1, column}});
+                moves.push_back(Move{{row, column}, {row - 1, column}},
+                                board_ref);
             }
             ////////////////
             // Add moves where we captur a other piece diagonal and are not on
             // the row 3
             if (board_ref.containEnemyPiece(row - 1, column + 1))
             {
-                moves.push_back(
-                    Move{{row, column},
-                         {row - 1, column + 1},
-                         board_ref.getBoard()[row - 1][column + 1]});
+                moves.push_back(Move{{row, column},
+                                     {row - 1, column + 1},
+                                     board_ref.getBoard()[row - 1][column + 1]},
+                                board_ref);
             }
             if (board_ref.containEnemyPiece(row - 1, column - 1))
             {
-                moves.push_back(
-                    Move{{row, column},
-                         {row - 1, column - 1},
-                         board_ref.getBoard()[row - 1][column - 1]});
+                moves.push_back(Move{{row, column},
+                                     {row - 1, column - 1},
+                                     board_ref.getBoard()[row - 1][column - 1]},
+                                board_ref);
             }
         }
 
@@ -267,11 +234,23 @@ void addMovesOfOnePawn(const Board& board_ref, size_t row, size_t column,
             // en passage to the right or left
             if (board_ref.getEnPassant() == Coord{row - 1, column - 1})
             {
-                moves.push_back(Move{{row, column}, {row - 1, column - 1}});
+                moves.push_back(Move{{row, column},
+                                     {row - 1, column - 1},
+                                     board_ref.getBoard()[row][column - 1],
+                                     Piece{},
+                                     false,
+                                     true},
+                                board_ref);
             }
             if (board_ref.getEnPassant() == Coord{row - 1, column + 1})
             {
-                moves.push_back(Move{{row, column}, {row - 1, column + 1}});
+                moves.push_back(Move{{row, column},
+                                     {row - 1, column + 1},
+                                     board_ref.getBoard()[row][column + 1],
+                                     Piece{},
+                                     false,
+                                     true},
+                                board_ref);
             }
         }
     }
@@ -279,166 +258,176 @@ void addMovesOfOnePawn(const Board& board_ref, size_t row, size_t column,
 
 /////////////////////
 // define moves for the rook
-void addMovesOfOneRook(const Board& board_ref, size_t row, size_t column,
+void addMovesOfOneRook(Board& board_ref, size_t row, size_t column,
                        MoveList& moves)
 {
-
     // first we find all moves horizontal right to the rook
     std::size_t nextColumn{column + 1};
     while (board_ref.isEmptyField(row, nextColumn))
     {
-        moves.push_back(Move{{row, column}, {row, nextColumn}});
+        moves.push_back(Move{{row, column}, {row, nextColumn}}, board_ref);
         ++nextColumn;
     }
     if (board_ref.containEnemyPiece(row, nextColumn))
     {
         moves.push_back(Move{{row, column},
                              {row, nextColumn},
-                             board_ref.getBoard()[row][nextColumn]});
+                             board_ref.getBoard()[row][nextColumn]},
+                        board_ref);
     }
 
     // then we find all moves horizontal left to the rook
     nextColumn = column - 1;
     while (board_ref.isEmptyField(row, nextColumn))
     {
-        moves.push_back(Move{{row, column}, {row, nextColumn}});
+        moves.push_back(Move{{row, column}, {row, nextColumn}}, board_ref);
         --nextColumn;
     }
     if (board_ref.containEnemyPiece(row, nextColumn))
     {
         moves.push_back(Move{{row, column},
                              {row, nextColumn},
-                             board_ref.getBoard()[row][nextColumn]});
+                             board_ref.getBoard()[row][nextColumn]},
+                        board_ref);
     }
 
     // then we find all moves verticaly up
     std::size_t nextRow{row + 1};
     while (board_ref.isEmptyField(nextRow, column))
     {
-        moves.push_back(Move{{row, column}, {nextRow, column}});
+        moves.push_back(Move{{row, column}, {nextRow, column}}, board_ref);
         ++nextRow;
     }
     if (board_ref.containEnemyPiece(nextRow, column))
     {
         moves.push_back(Move{{row, column},
-                             {row, nextColumn},
-                             board_ref.getBoard()[nextRow][column]});
+                             {nextRow, column},
+                             board_ref.getBoard()[nextRow][column]},
+                        board_ref);
     }
 
     // now we find all moves vertical down
     nextRow = row - 1;
     while (board_ref.isEmptyField(nextRow, column))
     {
-        moves.push_back(Move{{row, column}, {nextRow, column}});
+        moves.push_back(Move{{row, column}, {nextRow, column}}, board_ref);
         --nextRow;
     }
     if (board_ref.containEnemyPiece(nextRow, column))
     {
         moves.push_back(Move{{row, column},
-                             {row, nextColumn},
-                             board_ref.getBoard()[nextRow][column]});
+                             {nextRow, column},
+                             board_ref.getBoard()[nextRow][column]},
+                        board_ref);
     }
 }
 
 /////////////////////
 // define moves for the Knight
-void addMovesOfOneKnight(const Board& board_ref, size_t row, size_t column,
+void addMovesOfOneKnight(Board& board_ref, size_t row, size_t column,
                          MoveList& moves)
 {
-
     // the knight has 8 possible moves
     if (board_ref.isEmptyField(row + 2, column + 1))
     {
-        moves.push_back(Move{{row, column}, {row + 2, column + 1}});
+        moves.push_back(Move{{row, column}, {row + 2, column + 1}}, board_ref);
     }
-    else if (board_ref.containEnemyPawn(row + 2, column + 1))
+    else if (board_ref.containEnemyPiece(row + 2, column + 1))
     {
         moves.push_back(Move{{row, column},
                              {row + 2, column + 1},
-                             board_ref.getBoard()[row + 2][column + 1]});
+                             board_ref.getBoard()[row + 2][column + 1]},
+                        board_ref);
     }
 
     if (board_ref.isEmptyField(row + 1, column + 2))
     {
-        moves.push_back(Move{{row, column}, {row + 1, column + 2}});
+        moves.push_back(Move{{row, column}, {row + 1, column + 2}}, board_ref);
     }
     else if (board_ref.containEnemyPiece(row + 1, column + 2))
     {
         moves.push_back(Move{{row, column},
                              {row + 1, column + 2},
-                             board_ref.getBoard()[row + 1][column + 2]});
+                             board_ref.getBoard()[row + 1][column + 2]},
+                        board_ref);
     }
 
     if (board_ref.isEmptyField(row - 1, column + 2))
     {
-        moves.push_back(Move{{row, column}, {row - 1, column + 2}});
+        moves.push_back(Move{{row, column}, {row - 1, column + 2}}, board_ref);
     }
     else if (board_ref.containEnemyPiece(row - 1, column + 2))
     {
         moves.push_back(Move{{row, column},
                              {row - 1, column + 2},
-                             board_ref.getBoard()[row - 1][column + 2]});
+                             board_ref.getBoard()[row - 1][column + 2]},
+                        board_ref);
     }
 
     if (board_ref.isEmptyField(row - 2, column + 1))
     {
-        moves.push_back(Move{{row, column}, {row - 2, column + 1}});
+        moves.push_back(Move{{row, column}, {row - 2, column + 1}}, board_ref);
     }
     else if (board_ref.containEnemyPiece(row - 2, column + 1))
     {
         moves.push_back(Move{{row, column},
                              {row - 2, column + 1},
-                             board_ref.getBoard()[row - 2][column + 1]});
+                             board_ref.getBoard()[row - 2][column + 1]},
+                        board_ref);
     }
 
     if (board_ref.isEmptyField(row - 2, column - 1))
     {
-        moves.push_back(Move{{row, column}, {row - 2, column - 1}});
+        moves.push_back(Move{{row, column}, {row - 2, column - 1}}, board_ref);
     }
     else if (board_ref.containEnemyPiece(row - 2, column - 1))
     {
         moves.push_back(Move{{row, column},
                              {row - 2, column - 1},
-                             board_ref.getBoard()[row - 2][column - 1]});
+                             board_ref.getBoard()[row - 2][column - 1]},
+                        board_ref);
     }
 
     if (board_ref.isEmptyField(row - 1, column - 2))
     {
-        moves.push_back(Move{{row, column}, {row - 1, column - 2}});
+        moves.push_back(Move{{row, column}, {row - 1, column - 2}}, board_ref);
     }
     else if (board_ref.containEnemyPiece(row - 1, column - 2))
     {
         moves.push_back(Move{{row, column},
                              {row - 1, column - 2},
-                             board_ref.getBoard()[row - 1][column - 2]});
+                             board_ref.getBoard()[row - 1][column - 2]},
+                        board_ref);
     }
 
     if (board_ref.isEmptyField(row + 1, column - 2))
     {
-        moves.push_back(Move{{row, column}, {row + 1, column - 2}});
+        moves.push_back(Move{{row, column}, {row + 1, column - 2}}, board_ref);
     }
     else if (board_ref.containEnemyPiece(row + 1, column - 2))
     {
         moves.push_back(Move{{row, column},
                              {row + 1, column - 2},
-                             board_ref.getBoard()[row + 1][column - 2]});
+                             board_ref.getBoard()[row + 1][column - 2]},
+                        board_ref);
     }
 
     if (board_ref.isEmptyField(row + 2, column - 1))
     {
-        moves.push_back(Move{{row, column}, {row + 2, column - 1}});
+        moves.push_back(Move{{row, column}, {row + 2, column - 1}}, board_ref);
     }
     else if (board_ref.containEnemyPiece(row + 2, column - 1))
     {
         moves.push_back(Move{{row, column},
                              {row + 2, column - 1},
-                             board_ref.getBoard()[row + 2][column - 1]});
+                             board_ref.getBoard()[row + 2][column - 1]},
+                        board_ref);
     }
 }
 
 /////////////////////
 // define moves for the bishop
-void addMovesOfOneBishop(const Board& board_ref, size_t row, size_t column,
+void addMovesOfOneBishop(Board& board_ref, size_t row, size_t column,
                          MoveList& moves)
 {
     // now we find all moves diagonal upper right
@@ -446,15 +435,16 @@ void addMovesOfOneBishop(const Board& board_ref, size_t row, size_t column,
     std::size_t nextColumn = column + 1;
     while (board_ref.isEmptyField(nextRow, nextColumn))
     {
-        moves.push_back(Move{{row, column}, {nextRow, nextColumn}});
+        moves.push_back(Move{{row, column}, {nextRow, nextColumn}}, board_ref);
         ++nextRow;
         ++nextColumn;
     }
     if (board_ref.containEnemyPiece(nextRow, nextColumn))
     {
         moves.push_back(Move{{row, column},
-                             {row, nextColumn},
-                             board_ref.getBoard()[nextRow][column]});
+                             {nextRow, nextColumn},
+                             board_ref.getBoard()[nextRow][nextColumn]},
+                        board_ref);
     }
 
     // now we find all moves diagonal down right
@@ -462,15 +452,16 @@ void addMovesOfOneBishop(const Board& board_ref, size_t row, size_t column,
     nextColumn = column + 1;
     while (board_ref.isEmptyField(nextRow, nextColumn))
     {
-        moves.push_back(Move{{row, column}, {nextRow, nextColumn}});
+        moves.push_back(Move{{row, column}, {nextRow, nextColumn}}, board_ref);
         --nextRow;
         ++nextColumn;
     }
     if (board_ref.containEnemyPiece(nextRow, nextColumn))
     {
         moves.push_back(Move{{row, column},
-                             {row, nextColumn},
-                             board_ref.getBoard()[nextRow][column]});
+                             {nextRow, nextColumn},
+                             board_ref.getBoard()[nextRow][nextColumn]},
+                        board_ref);
     }
 
     // now we find all moves diagonal down left
@@ -478,15 +469,16 @@ void addMovesOfOneBishop(const Board& board_ref, size_t row, size_t column,
     nextColumn = column - 1;
     while (board_ref.isEmptyField(nextRow, nextColumn))
     {
-        moves.push_back(Move{{row, column}, {nextRow, nextColumn}});
+        moves.push_back(Move{{row, column}, {nextRow, nextColumn}}, board_ref);
         --nextRow;
         --nextColumn;
     }
     if (board_ref.containEnemyPiece(nextRow, nextColumn))
     {
         moves.push_back(Move{{row, column},
-                             {row, nextColumn},
-                             board_ref.getBoard()[nextRow][column]});
+                             {nextRow, nextColumn},
+                             board_ref.getBoard()[nextRow][nextColumn]},
+                        board_ref);
     }
 
     // now we find all moves diagonal upper left
@@ -494,21 +486,22 @@ void addMovesOfOneBishop(const Board& board_ref, size_t row, size_t column,
     nextColumn = column - 1;
     while (board_ref.isEmptyField(nextRow, nextColumn))
     {
-        moves.push_back(Move{{row, column}, {nextRow, nextColumn}});
+        moves.push_back(Move{{row, column}, {nextRow, nextColumn}}, board_ref);
         ++nextRow;
         --nextColumn;
     }
     if (board_ref.containEnemyPiece(nextRow, nextColumn))
     {
         moves.push_back(Move{{row, column},
-                             {row, nextColumn},
-                             board_ref.getBoard()[nextRow][column]});
+                             {nextRow, nextColumn},
+                             board_ref.getBoard()[nextRow][nextColumn]},
+                        board_ref);
     }
 }
 
 /////////////////////
 // define moves for the rook
-void addMovesOfOneQueen(const Board& board_ref, size_t row, size_t column,
+void addMovesOfOneQueen(Board& board_ref, size_t row, size_t column,
                         MoveList& moves)
 {
     // as the queen is the combination of rook and bishop we can reuse their
@@ -521,36 +514,26 @@ void addMovesOfOneQueen(const Board& board_ref, size_t row, size_t column,
 void addOneMoveForTheKing(Board& board_ref, size_t row, size_t column,
                           size_t nextRow, size_t nextColumn, MoveList& moves)
 {
-
-    // Todo: is there a more elegant way for this?
-
     // we have to check if the king is under attack after he make the
     // move.
     // It's possible that the king itself block a field so that the
     // field before was not under attack. So thats why we have to
     // simulate the move here.
     Move testMove = Move{{row, column}, {nextRow, nextColumn}};
-    board_ref.makeTestMove(testMove);
 
     // with the king we have the special rule that the king can't move to a
     // field if he then is under attack.
-    if (!board_ref.fieldIsUnderAttack(nextRow, nextColumn))
+
+    if (board_ref.isEmptyField(nextRow, nextColumn))
     {
-        board_ref.undoTestMove(testMove);
-        if (board_ref.isEmptyField(nextRow, nextColumn))
-        {
-            moves.push_back(testMove);
-        }
-        else if (board_ref.containEnemyPiece(nextRow, nextColumn))
-        {
-            moves.push_back(Move{{row, column},
-                                 {nextRow, nextColumn},
-                                 board_ref.getBoard()[nextRow][nextColumn]});
-        }
+        moves.push_back(testMove, board_ref);
     }
-    else
+    else if (board_ref.containEnemyPiece(nextRow, nextColumn))
     {
-        board_ref.undoTestMove(testMove);
+        moves.push_back(Move{{row, column},
+                             {nextRow, nextColumn},
+                             board_ref.getBoard()[nextRow][nextColumn]},
+                        board_ref);
     }
 }
 
@@ -558,7 +541,6 @@ void addOneMoveForTheKing(Board& board_ref, size_t row, size_t column,
 void addMovesOfOneKing(Board& board_ref, size_t row, size_t column,
                        MoveList& moves)
 {
-
     // here we add the moves with one step with the king.
     for (auto [offsetRow, offsetColumn] : neighborsOffset)
     {
@@ -568,7 +550,7 @@ void addMovesOfOneKing(Board& board_ref, size_t row, size_t column,
                              moves);
     }
 
-    // Here we handle the rochade
+    // Here we handle the castling
     std::array<bool, 4> castleArray = board_ref.getCastleKing();
     if (board_ref.getSideToMove() == Color::White)
     {
@@ -582,15 +564,15 @@ void addMovesOfOneKing(Board& board_ref, size_t row, size_t column,
             !board_ref.fieldIsUnderAttack(2, 7) &&
             !board_ref.fieldIsUnderAttack(2, 8))
         {
-            moves.push_back(Move{{row, column}, {2, 8}});
+            moves.push_back(Move{{row, column}, {2, 8}}, board_ref);
         }
         if (castleArray[1] && board_ref.isEmptyField(2, 3) &&
-            board_ref.isEmptyField(2, 4) && board_ref.isEmptyField(2, 4) &&
+            board_ref.isEmptyField(2, 4) && board_ref.isEmptyField(2, 5) &&
             !board_ref.fieldIsUnderAttack(2, 6) &&
             !board_ref.fieldIsUnderAttack(2, 5) &&
             !board_ref.fieldIsUnderAttack(2, 4))
         {
-            moves.push_back(Move{{row, column}, {2, 4}});
+            moves.push_back(Move{{row, column}, {2, 4}}, board_ref);
         }
     }
     else
@@ -601,7 +583,7 @@ void addMovesOfOneKing(Board& board_ref, size_t row, size_t column,
             !board_ref.fieldIsUnderAttack(9, 7) &&
             !board_ref.fieldIsUnderAttack(9, 8))
         {
-            moves.push_back(Move{{row, column}, {9, 8}});
+            moves.push_back(Move{{row, column}, {9, 8}}, board_ref);
         }
         if (castleArray[3] && board_ref.isEmptyField(9, 5) &&
             board_ref.isEmptyField(9, 4) && board_ref.isEmptyField(9, 3) &&
@@ -609,7 +591,7 @@ void addMovesOfOneKing(Board& board_ref, size_t row, size_t column,
             !board_ref.fieldIsUnderAttack(9, 5) &&
             !board_ref.fieldIsUnderAttack(9, 4))
         {
-            moves.push_back(Move{{row, column}, {9, 4}});
+            moves.push_back(Move{{row, column}, {9, 4}}, board_ref);
         }
     }
 }
@@ -649,7 +631,7 @@ void addMovesOfOnePiece(const Piece& piece, Board& board_ref, size_t row,
         addMovesOfOneKing(board_ref, row, column, moves);
         break;
     default:
-        assert("Move generation: didn't find correct piece");
+        assert(false && "Move generation: didn't find correct piece");
         break;
     }
 }

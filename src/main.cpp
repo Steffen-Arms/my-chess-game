@@ -13,7 +13,19 @@
 long perft_test(Board board, int half_moves)
 {
     MoveList allPossibleMoves = generateMoves(board);
-    long nodes;
+
+    ///////////////////////
+    // print list
+    // std::cout << "halfmoves: " << half_moves << '\n';
+    // for (auto move : allPossibleMoves)
+    // {
+    //     std::cout << move.from.row << ' ' << move.from.column
+    //               << " to: " << move.to.row << " " << move.to.column << '\n';
+    // }
+    // std::cout << '\n';
+    ////////////////////////////////
+
+    long nodes{0};
     if (half_moves == 1)
     { // so there is only one half-round left.
         return static_cast<long>(
@@ -33,49 +45,52 @@ long perft_test(Board board, int half_moves)
 
 int main()
 {
-    // Board rookTest{"rnbqkbnr/pppppppp/8/8/8/8/8/3R4 w KQkq - 0 1"};
-    // rookTest.print();
-    // std::cout << '\n';
-    // long amountOfNodes = perft_test(rookTest, 1);
-    // std::cout << "rook test 1: " << amountOfNodes << '\n';
-
-    // Board rookKnight{"rnbqkbnr/pppppppp/8/3N4/8/8/8/8 w KQkq - 0 1"};
-    // rookKnight.print();
-    // std::cout << '\n';
-    // long amountOfNodes2 = perft_test(rookKnight, 1);
-    // std::cout << "knight test 1: " << amountOfNodes2 << '\n';
-
-    // Board rookBishop{"rnbqkbnr/pppppppp/8/3B4/8/8/8/8 w KQkq - 0 1"};
-    // rookBishop.print();
-    // std::cout << '\n';
-    // long amountOfNodes3 = perft_test(rookBishop, 1);
-    // std::cout << "bishop test 1: " << amountOfNodes3 << '\n';
-
-    // Board rookQueen{"rnbqkbnr/pppppppp/8/8/8/8/8/3Q4 w KQkq - 0 1"};
-    // rookQueen.print();
-    // std::cout << '\n';
-    // long amountOfNodes4 = perft_test(rookQueen, 1);
-    // std::cout << "queen test 1: " << amountOfNodes4 << '\n';
-
-    Board rookKing{"rnbqkbnr/ppp1pppp/8/8/8/8/3K4/8 w KQkq - 0 1"};
-    rookKing.print();
+    Board testBoard{};
+    testBoard.print();
     std::cout << '\n';
-    long amountOfNodes5 = perft_test(rookKing, 1);
-    std::cout << "king test 1: " << amountOfNodes5 << '\n';
+    for (int i{1}; i < 6; ++i)
+    {
+        long amountOfNodes = perft_test(testBoard, i);
+        std::cout << "Board after " << i << " : " << amountOfNodes << '\n';
+    }
 
-    // Board noFen{};
-    // noFen.print();
+    // Board rookKing{
+    //     "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - "};
+    // rookKing.print();
     // std::cout << '\n';
+    // for (int i{1}; i < 4; ++i)
+    // {
+    //     std::cout << "new i \n";
+    //     long amountOfNodes = perft_test(rookKing, i);
+    //     std::cout << "######################## \n";
+    //     std::cout << "Board after " << i << " : " << amountOfNodes << '\n';
+    //     std::cout << '\n';
+    //     std::cout << '\n';
+    // }
 
-    // long amountOfNodes = perft_test(noFen, 3);
-    // std::cout << "amount of moves depth 2: " << amountOfNodes << '\n';
+    // Board rookKing{"8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1 "};
+    // rookKing.print();
+    // std::cout << '\n';
+    // for (int i{1}; i < 4; ++i)
+    // {
+    //     std::cout << "new i \n";
+    //     long amountOfNodes = perft_test(rookKing, i);
+    //     std::cout << "######################## \n";
+    //     std::cout << "Board after " << i << " : " << amountOfNodes << '\n';
+    //     std::cout << '\n';
+    //     std::cout << '\n';
+    // }
 
-    // amountOfNodes = perft_test(testBoard, 3);
-    // std::cout << "amount of moves depth 3: " << amountOfNodes << '\n';
-
-    // amountOfNodes = perft_test(testBoard, 4);
-    // std::cout << "amount of moves depth 4: " << amountOfNodes << '\n';
-
-    // amountOfNodes = perft_test(testBoard, 5);
-    // std::cout << "amount of moves depth 5: " << amountOfNodes << '\n';
+    // Board rookKing{"8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1 "};
+    // rookKing.print();
+    // std::cout << '\n';
+    // for (int i{1}; i < 4; ++i)
+    // {
+    //     std::cout << "new i \n";
+    //     long amountOfNodes = perft_test(rookKing, i);
+    //     std::cout << "######################## \n";
+    //     std::cout << "Board after " << i << " : " << amountOfNodes << '\n';
+    //     std::cout << '\n';
+    //     std::cout << '\n';
+    // }
 }
