@@ -1,3 +1,4 @@
+#include "perft.h"
 #include "board.h"
 #include "move.h"
 #include "move_list.h"

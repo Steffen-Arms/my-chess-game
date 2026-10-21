@@ -39,7 +39,7 @@ int main()
         long result = perft_test(board, c.depth);
         bool validTest = result == c.expected;
         passedAllTest &= validTest;
-        std::cout << (validTest ? "PASS" : "FAIL") << c.fen << " depth "
+        std::cout << (validTest ? "PASS: " : "FAIL: ") << c.fen << " depth "
                   << c.depth << ": " << result << " (expected " << c.expected
                   << ")\n";
     }

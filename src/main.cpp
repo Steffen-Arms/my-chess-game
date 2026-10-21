@@ -71,7 +71,7 @@ int main()
                     "R4RK1 w - - 0 10 "};
     position6.print();
     std::cout << '\n';
-    for (int i{1}; i < 6; ++i)
+    for (int i{1}; i < 4; ++i)
     {
         long amountOfNodes = perft_test(position6, i);
         std::cout << "Board after " << i << " : " << amountOfNodes << '\n';
