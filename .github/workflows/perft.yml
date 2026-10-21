@@ -11,6 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Build
+        working-directory: src
         run: ${{ matrix.compiler }} -std=c++20 -O2 -Wall -Wextra -o perft_test perft_test.cpp board.cpp move.cpp engine_info.cpp
       - name: Run perft
         run: ./perft_test
