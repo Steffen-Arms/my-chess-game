@@ -401,19 +401,12 @@ bool Board::kingInCheckAfterMove(Move newMove)
 {
     Coord oldWhiteKingPosition = m_whiteKing;
     Coord oldBlackKingPosition = m_blackKing;
-    if (newMove.from == m_whiteKing)
-    {
-        m_whiteKing = newMove.to;
-    }
-    else if (newMove.from == m_blackKing)
-    {
-        m_blackKing = newMove.to;
-    }
-    makeTestMove(newMove);
+
+    UndoInfo info = makeTestMove(newMove);
     bool isUnderAttack = m_sideToMove == Color::White
                              ? fieldIsUnderAttack(m_whiteKing)
                              : fieldIsUnderAttack(m_blackKing);
-    undoTestMove(newMove);
+    undoTestMove(newMove, info);
     m_whiteKing = oldWhiteKingPosition;
     m_blackKing = oldBlackKingPosition;
     return isUnderAttack;
@@ -421,8 +414,11 @@ bool Board::kingInCheckAfterMove(Move newMove)
 
 // same method as makeMove but without changing the color
 // this function is just to validate the field after one move
-void Board::makeTestMove(Move move)
+UndoInfo Board::makeTestMove(Move move)
 {
+    // first we save meta board information to our return value
+    UndoInfo info{m_enPassantField, m_castleKing};
+
     // here we handle enPassage
     // here we handle if we have the enPassage right from the previous half
     // round
@@ -450,25 +446,18 @@ void Board::makeTestMove(Move move)
     // we save the coordinates of the enPassage field
     if (move.createEnPassageRight)
     {
-        if (m_sideToMove == Color::White)
-        {
-            // here we store the field valid for a enPassage
-            m_enPassantField = Coord{move.to.row + 1, move.to.column};
-        }
-        else
-        {
-            m_enPassantField = Coord{move.to.row - 1, move.to.column};
-        }
+        m_enPassantField =
+            Coord{(move.from.row + move.to.row) / 2, move.to.column};
     }
 
     // special treatment if we move the king
     if (move.from == m_whiteKing)
     {
-        std::size_t rowDiff = move.from.row < move.to.row
-                                  ? move.to.row - move.from.row
-                                  : move.from.row - move.to.row;
+        std::size_t columnDiff = move.from.column < move.to.column
+                                     ? move.to.column - move.from.column
+                                     : move.from.column - move.to.column;
         m_whiteKing = move.to;
-        if (rowDiff > 1) // this is the case we castle
+        if (columnDiff > 1) // this is the case we castle
         {
             if (move.to.column == 8)
             { // this is the short castling
@@ -485,14 +474,17 @@ void Board::makeTestMove(Move move)
                 m_board[2][2] = Piece{};
             }
         }
+        // regardless how we move the king the castling rights are gone
+        m_castleKing[0] = false;
+        m_castleKing[1] = false;
     }
     else if (move.from == m_blackKing)
     {
-        std::size_t rowDiff = move.from.row < move.to.row
-                                  ? move.to.row - move.from.row
-                                  : move.from.row - move.to.row;
+        std::size_t columnDiff = move.from.column < move.to.column
+                                     ? move.to.column - move.from.column
+                                     : move.from.column - move.to.column;
         m_blackKing = move.to;
-        if (rowDiff > 1) // this is the case we castle
+        if (columnDiff > 1) // this is the case we castle
         {
             if (move.to.column == 8)
             { // this is the short castling
@@ -509,16 +501,82 @@ void Board::makeTestMove(Move move)
                 m_board[9][2] = Piece{};
             }
         }
+        m_castleKing[2] = false;
+        m_castleKing[3] = false;
     }
 
-    m_board[move.to.row][move.to.column] =
-        m_board[move.from.row][move.from.column];
+    // if we move a rook or capture one the corresbonding castling right is
+    // gone
+    if (m_castleKing[0] || m_castleKing[1] || m_castleKing[2] ||
+        m_castleKing[3])
+    {
+        // if the rook is moving we have to change the castle rights
+        if (m_board[move.from.row][move.from.column].getType() ==
+            PieceType::Rook)
+        {
+            if (move.from.row == 2 && move.from.column == 9)
+            {
+                m_castleKing[0] = false; // we dont check if its already
+                                         // false. That doesn't matter.
+            }
+            else if (move.from.row == 2 && move.from.column == 2)
+            {
+                m_castleKing[1] = false;
+            }
+            else if (move.from.row == 9 && move.from.column == 9)
+            {
+                m_castleKing[2] = false;
+            }
+            else if (move.from.row == 9 && move.from.column == 2)
+            {
+                m_castleKing[3] = false;
+            }
+        }
+        // if the rook get captured we need to change the castle rights
+        if (move.capturePiece.getType() == PieceType::Rook)
+        {
+            if (move.to.row == 2 && move.to.column == 9)
+            {
+                m_castleKing[0] = false; // we dont check if its already
+                                         // false. That doesn't matter.
+            }
+            else if (move.to.row == 2 && move.to.column == 2)
+            {
+                m_castleKing[1] = false;
+            }
+            else if (move.to.row == 9 && move.to.column == 9)
+            {
+                m_castleKing[2] = false;
+            }
+            else if (move.to.row == 9 && move.to.column == 2)
+            {
+                m_castleKing[3] = false;
+            }
+        }
+    }
+
+    // here we have to check if a pawn is transforming to another piece
+    if (move.transform.getType() != PieceType::Empty)
+    {
+        m_board[move.to.row][move.to.column] = move.transform;
+    }
+    else
+    {
+        m_board[move.to.row][move.to.column] =
+            m_board[move.from.row][move.from.column];
+    }
     m_board[move.from.row][move.from.column] =
         Piece{}; // if we make a move we leave a emtpy field behind
+
+    return info;
 }
 
-void Board::undoTestMove(Move move)
+void Board::undoTestMove(Move move, const UndoInfo& info)
 {
+    // here we restore the meta board information
+    m_enPassantField = info.enPassant;
+    m_castleKing = info.castle;
+
     // here we detect if the move is a enPassage move
     // that need a special treatment as the captured piece is not from the field
     // the move goes to.
@@ -536,23 +594,17 @@ void Board::undoTestMove(Move move)
         {
             m_board[move.to.row + 1][move.to.column] = move.capturePiece;
         }
-        m_enPassantField = move.to;
     }
     else
     {
-        if (move.createEnPassageRight)
-        {
-            m_enPassantField.reset();
-        }
-
         // special treatment if we move the king
         if (move.to == m_whiteKing)
         {
-            std::size_t rowDiff = move.from.row < move.to.row
-                                      ? move.to.row - move.from.row
-                                      : move.from.row - move.to.row;
+            std::size_t columnDiff = move.from.column < move.to.column
+                                         ? move.to.column - move.from.column
+                                         : move.from.column - move.to.column;
             m_whiteKing = move.from;
-            if (rowDiff > 1) // this is the case we castle
+            if (columnDiff > 1) // this is the case we castle
             {
                 if (move.to.column == 8)
                 { // this is the short castling
@@ -572,11 +624,11 @@ void Board::undoTestMove(Move move)
         }
         else if (move.to == m_blackKing)
         {
-            std::size_t rowDiff = move.from.row < move.to.row
-                                      ? move.to.row - move.from.row
-                                      : move.from.row - move.to.row;
+            std::size_t columnDiff = move.from.column < move.to.column
+                                         ? move.to.column - move.from.column
+                                         : move.from.column - move.to.column;
             m_blackKing = move.from;
-            if (rowDiff > 1) // this is the case we castle
+            if (columnDiff > 1) // this is the case we castle
             {
                 if (move.to.column == 8)
                 { // this is the short castling
@@ -595,9 +647,20 @@ void Board::undoTestMove(Move move)
             }
         }
 
-        m_board[move.from.row][move.from.column] =
-            m_board[move.to.row][move.to.column];
+        // here we check if the move take a pawn and transform it. Then we have
+        // to specify the new piece as we don't want to copy the transformed
+        // piece
+        if (move.transform.getType() != PieceType::Empty)
+        {
+            m_board[move.from.row][move.from.column] =
+                Piece{move.transform.getColor(), PieceType::Pawn};
+        }
+        else
+        {
 
+            m_board[move.from.row][move.from.column] =
+                m_board[move.to.row][move.to.column];
+        }
         // note if we don't capture a piece move.capturePiece give as a empty
         // piece.
         m_board[move.to.row][move.to.column] = move.capturePiece;
@@ -605,19 +668,20 @@ void Board::undoTestMove(Move move)
 }
 
 // ToDo: implement castle
-void Board::makeMove(Move move)
+UndoInfo Board::makeMove(Move move)
 {
     // the only difference betweent makeTestMove and makeMove is that makeMove
     // change which turn it is
-    makeTestMove(move);
+    UndoInfo info = makeTestMove(move);
     changeSideToMove();
+    return info;
 }
 
 // ToDo: implement castle
-void Board::undoMove(Move move)
+void Board::undoMove(Move move, const UndoInfo& info)
 {
-    undoTestMove(move);
     changeSideToMove();
+    undoTestMove(move, info);
 }
 
 ///////////////////
@@ -689,7 +753,7 @@ bool Board::fieldIsUnderOrthogonalAttack(std::size_t row,
         return true;
 
     nextRow = row - 1;
-    while (containOrthogonalEnemy(nextRow, column))
+    while (isEmptyField(nextRow, column))
     {
         --nextRow;
     }

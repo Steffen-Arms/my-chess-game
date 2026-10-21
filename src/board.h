@@ -125,6 +125,15 @@ class Piece
 
 using board_array = std::array<std::array<Piece, 12>, 12>;
 
+// It's not possible to reconstruct the castling or enPassange rights from one
+// move and board info alone. That's why we need to save these infomation to
+// undo a move.
+struct UndoInfo
+{
+    std::optional<Coord> enPassant;
+    std::array<bool, 4> castle;
+};
+
 class Board
 {
   public:
@@ -156,17 +165,16 @@ class Board
     bool isUnderKingAttack(std::size_t row, std::size_t column) const;
     bool kingInCheckAfterMove(Move newMove);
 
-    void makeTestMove(Move move);
-    void undoTestMove(Move move);
+    [[nodiscard]] UndoInfo makeTestMove(Move move);
+    void undoTestMove(Move move, const UndoInfo& info);
+    [[nodiscard]] UndoInfo makeMove(Move);
+    void undoMove(Move move, const UndoInfo& info);
 
     // For testing purposes.
     void print() const;
 
     void setEnPassant(Coord coord) { m_enPassantField = coord; }
     std::optional<Coord> getEnPassant() const { return m_enPassantField; }
-
-    void makeMove(Move);
-    void undoMove(Move);
 
     void addPiece(std::size_t rowIndex, std::size_t columnIndex,
                   char charPiece);
