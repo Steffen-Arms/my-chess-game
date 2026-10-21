@@ -1,0 +1,16 @@
+name: Perft
+
+on : [push]
+
+jobs:
+  perft:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [g++, clang++]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build
+        run: ${{ matrix.compiler }} -std=c++20 -O2 -Wall -Wextra -o perft_test perft_test.cpp board.cpp move.cpp engine_info.cpp
+      - name: Run perft
+        run: ./perft_test
