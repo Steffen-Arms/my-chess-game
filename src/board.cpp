@@ -85,11 +85,13 @@ void Board::addPiece(std::size_t rowIndex, std::size_t columnIndex,
         {
             m_board[rowIndex][columnIndex] =
                 Piece{Color::White, PieceType::Pawn};
+            ++m_countPiece[idx(Color::White)][idx(PieceType::Pawn)];
         }
         else
         {
             m_board[rowIndex][columnIndex] =
                 Piece{Color::Black, PieceType::Pawn};
+            ++m_countPiece[idx(Color::Black)][idx(PieceType::Pawn)];
         }
         break;
     case 'r':
@@ -97,11 +99,13 @@ void Board::addPiece(std::size_t rowIndex, std::size_t columnIndex,
         {
             m_board[rowIndex][columnIndex] =
                 Piece{Color::White, PieceType::Rook};
+            ++m_countPiece[idx(Color::White)][idx(PieceType::Rook)];
         }
         else
         {
             m_board[rowIndex][columnIndex] =
                 Piece{Color::Black, PieceType::Rook};
+            ++m_countPiece[idx(Color::Black)][idx(PieceType::Rook)];
         }
         break;
     case 'n':
@@ -109,11 +113,13 @@ void Board::addPiece(std::size_t rowIndex, std::size_t columnIndex,
         {
             m_board[rowIndex][columnIndex] =
                 Piece{Color::White, PieceType::Knight};
+            ++m_countPiece[idx(Color::White)][idx(PieceType::Knight)];
         }
         else
         {
             m_board[rowIndex][columnIndex] =
                 Piece{Color::Black, PieceType::Knight};
+            ++m_countPiece[idx(Color::Black)][idx(PieceType::Knight)];
         }
         break;
     case 'b':
@@ -121,11 +127,13 @@ void Board::addPiece(std::size_t rowIndex, std::size_t columnIndex,
         {
             m_board[rowIndex][columnIndex] =
                 Piece{Color::White, PieceType::Bishop};
+            ++m_countPiece[idx(Color::White)][idx(PieceType::Bishop)];
         }
         else
         {
             m_board[rowIndex][columnIndex] =
                 Piece{Color::Black, PieceType::Bishop};
+            ++m_countPiece[idx(Color::Black)][idx(PieceType::Bishop)];
         }
         break;
     case 'q':
@@ -133,11 +141,13 @@ void Board::addPiece(std::size_t rowIndex, std::size_t columnIndex,
         {
             m_board[rowIndex][columnIndex] =
                 Piece{Color::White, PieceType::Queen};
+            ++m_countPiece[idx(Color::White)][idx(PieceType::Queen)];
         }
         else
         {
             m_board[rowIndex][columnIndex] =
                 Piece{Color::Black, PieceType::Queen};
+            ++m_countPiece[idx(Color::Black)][idx(PieceType::Queen)];
         }
         break;
     case 'k':
@@ -161,7 +171,8 @@ void Board::addPiece(std::size_t rowIndex, std::size_t columnIndex,
 
 Board::Board()
     : m_board{startBoard()}, m_sideToMove{Color::White}, m_halfMoves{0},
-      m_whiteKing{Coord{2, 6}}, m_blackKing{Coord{9, 6}}
+      m_whiteKing{Coord{2, 6}}, m_blackKing{Coord{9, 6}},
+      m_countPiece{{{8, 2, 2, 2, 1}, {8, 2, 2, 2, 1}}}
 {
     m_castleKing.fill(true);
 }
@@ -172,7 +183,6 @@ Board::Board(std::string_view fen) : m_board{}
     fillBoardBoundaries(m_board);
     // fen has this format: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -
     // 0 1
-    std::cout << "FEN: " << fen << '\n';
 
     // first seperate the first part (pieces postion) from the other
     // information
@@ -204,7 +214,6 @@ Board::Board(std::string_view fen) : m_board{}
     }
 
     // Here we insert the metadata
-    std::cout << "Meta data: " << metaInformation << '\n';
 
     // Default is no castling rights
     m_castleKing.fill(false);
@@ -419,6 +428,9 @@ UndoInfo Board::makeTestMove(Move move)
     // first we save meta board information to our return value
     UndoInfo info{m_enPassantField, m_castleKing};
 
+    // we update our piece counter
+    decreasePieceCound(move.capturePiece);
+
     // here we handle enPassage
     // here we handle if we have the enPassage right from the previous half
     // round
@@ -576,6 +588,9 @@ void Board::undoTestMove(Move move, const UndoInfo& info)
     // here we restore the meta board information
     m_enPassantField = info.enPassant;
     m_castleKing = info.castle;
+
+    // update piece count
+    increasePieceCound(move.capturePiece);
 
     // here we detect if the move is a enPassage move
     // that need a special treatment as the captured piece is not from the field

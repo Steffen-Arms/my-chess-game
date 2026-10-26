@@ -21,15 +21,21 @@ enum class Color
 
 enum class PieceType
 {
-    Empty,
-    Not_valid,
     Pawn,
     Rook,
-    Bishop,
     Knight,
+    Bishop,
     Queen,
     King,
+    Empty,
+    Not_valid,
 };
+
+constexpr std::size_t idx(Color c) { return static_cast<std::size_t>(c); }
+constexpr std::size_t idx(PieceType type)
+{
+    return static_cast<std::size_t>(type);
+}
 
 struct Coord
 {
@@ -207,6 +213,29 @@ class Board
     void setBlackKing(Coord newCoord) { m_blackKing = newCoord; }
     Coord getBlackKing() { return m_blackKing; }
 
+    int getPieceCount(Color c, PieceType type) const
+    {
+        return m_countPiece[idx(c)][idx(type)];
+    }
+    void decreasePieceCound(const Piece& piece)
+    {
+        if (piece.getType() != PieceType::Empty &&
+            piece.getType() != PieceType::Not_valid &&
+            piece.getColor() != Color::No_color)
+        {
+            --m_countPiece[idx(piece.getColor())][idx(piece.getType())];
+        }
+    }
+    void increasePieceCound(const Piece& piece)
+    {
+        if (piece.getType() != PieceType::Empty &&
+            piece.getType() != PieceType::Not_valid &&
+            piece.getColor() != Color::No_color)
+        {
+            ++m_countPiece[idx(piece.getColor())][idx(piece.getType())];
+        }
+    }
+
   private:
     // Naive implementation: a 12x12 array with a 2-square border around the
     // 8x8 field, which makes checking for valid moves easier.
@@ -230,6 +259,12 @@ class Board
     // position 0 is for white king side, position 1 is for white queen side
     // postion 2 is for black king side, position 3 is for black queen side
     std::array<bool, 4> m_castleKing;
+
+    // this array count how many pieces are on the board. The first array is for
+    // white and second is for black the sequence for a entry is: Pawn, Rook,
+    // Knight, Bishop, Queen note we don't count the king as every color has
+    // always exactly one.
+    std::array<std::array<int, 5>, 2> m_countPiece{};
 };
 
 #endif
