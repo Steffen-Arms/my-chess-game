@@ -117,48 +117,42 @@ constexpr int getPositionValue(Piece piece, std::size_t row, std::size_t column,
     // the row for the loopup table if we observe black
     std::size_t newRow;
     std::size_t newColumn;
+    if (piece.getColor() == Color::White)
+    {
+        newRow = row - 2;
+        newColumn = column - 2;
+    }
+    else
+    {
+        newRow = 7 - (row - 2);
+        newColumn = column - 2;
+    }
 
     switch (piece.getType())
     {
     case PieceType::Pawn:
-        // note for black we need to mirror the table that we use different
-        // indizes
-        piece.getColor() == Color::White
-            ? sum += pawnTable[row - 2][column - 2]
-            : sum += pawnTable[7 - (row - 2)][column];
+        sum += pawnTable[newRow][newColumn];
         break;
     case PieceType::Rook:
-        piece.getColor() == Color::White
-            ? sum += rookTable[row - 2][column - 2]
-            : sum += rookTable[7 - (row - 2)][column];
+        sum += rookTable[newRow][newColumn];
         break;
     case PieceType::Knight:
-        piece.getColor() == Color::White
-            ? sum += knightTable[row - 2][column - 2]
-            : sum += knightTable[7 - (row - 2)][column];
+        sum += knightTable[newRow][newColumn];
         break;
     case PieceType::Bishop:
-        piece.getColor() == Color::White
-            ? sum += bishopTable[row - 2][column - 2]
-            : sum += bishopTable[7 - (row - 2)][column];
+        sum += bishopTable[newRow][newColumn];
         break;
     case PieceType::Queen:
-        piece.getColor() == Color::White
-            ? sum += queenTable[row - 2][column - 2]
-            : sum += queenTable[7 - (row - 2)][column];
+        sum += queenTable[newRow][newColumn];
         break;
     case PieceType::King:
         if (endgame)
         {
-            piece.getColor() == Color::White
-                ? sum += kingEndTable[row - 2][column - 2]
-                : sum += kingEndTable[7 - (row - 2)][column];
+            sum += kingEndTable[newRow][newColumn];
         }
         else
         {
-            piece.getColor() == Color::White
-                ? sum += kingMidTable[row - 2][column - 2]
-                : sum += kingMidTable[7 - (row - 2)][column];
+            sum += kingMidTable[newRow][newColumn];
         }
         break;
     default:
@@ -168,14 +162,35 @@ constexpr int getPositionValue(Piece piece, std::size_t row, std::size_t column,
     return sum;
 }
 
+bool colorIsInEndgame(Color color, const Board& board)
+{
+    return board.getPieceCount(color, PieceType::Queen) == 0 ||
+           (board.getPieceCount(color, PieceType::Rook) == 0 &&
+            board.getPieceCount(color, PieceType::Bishop) +
+                    board.getPieceCount(color, PieceType::Knight) <=
+                1);
+}
+
+// we define endgame if both sides don't have a queen or eevery side that have a
+// queen have at most one minor piece (bishop, knight) and no rook
+bool isEndgame(const Board& board)
+{
+
+    if (colorIsInEndgame(Color::White, board) &&
+        colorIsInEndgame(Color::Black, board))
+    {
+        return true;
+    }
+    return false;
+}
+
 // always compute whitePoints - blackPoints then flip the sign if black is to
 // move
-// we define endgame if both sides don't have a queen or just a queen and a
-// minor piece
-int evaluateBoardPositionByPieceValue(Board& board)
+int evaluateBoardPositionByPieceValue(const Board& board)
 {
     int boardSum{0};
-    bool endgame{false};
+
+    bool endgame = isEndgame(board);
 
     for (std::size_t row{2}; row < 10; ++row)
     {
