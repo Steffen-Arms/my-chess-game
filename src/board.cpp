@@ -408,17 +408,17 @@ void Board::print() const
 // its not a valid move
 bool Board::kingInCheckAfterMove(Move newMove)
 {
-    Coord oldWhiteKingPosition = m_whiteKing;
-    Coord oldBlackKingPosition = m_blackKing;
+    UndoInfo undoInfo = makeTestMove(newMove);
+    bool inCheck = kingInCheck();
+    undoTestMove(newMove, undoInfo);
+    return inCheck;
+}
 
-    UndoInfo info = makeTestMove(newMove);
-    bool isUnderAttack = m_sideToMove == Color::White
-                             ? fieldIsUnderAttack(m_whiteKing)
-                             : fieldIsUnderAttack(m_blackKing);
-    undoTestMove(newMove, info);
-    m_whiteKing = oldWhiteKingPosition;
-    m_blackKing = oldBlackKingPosition;
-    return isUnderAttack;
+// return true if the king is in check for the current color
+bool Board::kingInCheck() const
+{
+    return m_sideToMove == Color::White ? fieldIsUnderAttack(m_whiteKing)
+                                        : fieldIsUnderAttack(m_blackKing);
 }
 
 // same method as makeMove but without changing the color
@@ -682,7 +682,6 @@ void Board::undoTestMove(Move move, const UndoInfo& info)
     }
 }
 
-// ToDo: implement castle
 UndoInfo Board::makeMove(Move move)
 {
     // the only difference betweent makeTestMove and makeMove is that makeMove
@@ -692,7 +691,6 @@ UndoInfo Board::makeMove(Move move)
     return info;
 }
 
-// ToDo: implement castle
 void Board::undoMove(Move move, const UndoInfo& info)
 {
     changeSideToMove();

@@ -1,31 +1,42 @@
 #include "board.h"
 #include "evaluation.cpp"
 #include "perft.h"
+#include "search.cpp"
 #include <iostream>
 
 int main()
 {
-    // Board board{};
-    // int sum = evaluateBoardPositionByPieceValue(board);
-    // std::cout << "sum: " << sum << "\n";
 
-    // Board board2{
-    //     "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2 "};
-    // int sum2 = evaluateBoardPositionByPieceValue(board2);
-    // std::cout << "sum2 " << sum2 << "\n";
+    // Board board3{"6k1/5ppp/8/8/8/8/8/R5K1 w - - 0 1"};
 
-    Board board3{"rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8  "};
-    int sum3 = evaluateBoardPositionByPieceValue(board3);
-    std::cout << "sum3 " << sum3 << "\n";
+    // board3.print();
 
-    std::cout << "black pawn: "
-              << board3.getPieceCount(Color::Black, PieceType::Pawn) << "\n";
-    std::cout << "black rook: "
-              << board3.getPieceCount(Color::Black, PieceType::Rook) << "\n";
-    std::cout << "black knight: "
-              << board3.getPieceCount(Color::Black, PieceType::Knight) << "\n";
-    std::cout << "black bishop: "
-              << board3.getPieceCount(Color::Black, PieceType::Bishop) << "\n";
-    std::cout << "black queen: "
-              << board3.getPieceCount(Color::Black, PieceType::Queen) << "\n";
+    // std::optional<Move> move = rootSearch(board3, 2);
+    // if (move.has_value())
+    // {
+    //     std::cout << "from: " << move.value().from.row << " "
+    //               << move.value().from.column << " to: " <<
+    //               move.value().to.row
+    //               << " " << move.value().to.column << "\n";
+    // }
+    // else
+    // {
+    //     std::cout << "no moves left";
+    // }
+
+    Board board4{"7k/8/6Q1/8/8/8/8/6K1 w - - 0 1"};
+
+    board4.print();
+    std::optional<Move> move4 = rootSearch(board4, 2);
+    if (move4.has_value())
+    {
+        std::cout << "from: " << move4.value().from.row << " "
+                  << move4.value().from.column
+                  << " to: " << move4.value().to.row << " "
+                  << move4.value().to.column << "\n";
+    }
+    else
+    {
+        std::cout << "no moves left \n";
+    }
 }

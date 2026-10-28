@@ -170,6 +170,7 @@ class Board
     bool isUnderPawnAttack(std::size_t row, std::size_t column) const;
     bool isUnderKingAttack(std::size_t row, std::size_t column) const;
     bool kingInCheckAfterMove(Move newMove);
+    bool kingInCheck() const;
 
     [[nodiscard]] UndoInfo makeTestMove(Move move);
     void undoTestMove(Move move, const UndoInfo& info);

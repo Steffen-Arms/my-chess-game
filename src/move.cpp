@@ -1,6 +1,7 @@
 #include "board.h"
 #include "move_list.h"
 #include <cassert>
+#include <iostream>
 #include <vector>
 
 ////////////////////////////////////////////////////////////////////////
@@ -510,23 +511,14 @@ void addMovesOfOneQueen(Board& board_ref, size_t row, size_t column,
     addMovesOfOneBishop(board_ref, row, column, moves);
 }
 
-// Add a move if we don't hit a boundary
+// Add a move if we are not in check after that.
 void addOneMoveForTheKing(Board& board_ref, size_t row, size_t column,
                           size_t nextRow, size_t nextColumn, MoveList& moves)
 {
-    // we have to check if the king is under attack after he make the
-    // move.
-    // It's possible that the king itself block a field so that the
-    // field before was not under attack. So thats why we have to
-    // simulate the move here.
-    Move testMove = Move{{row, column}, {nextRow, nextColumn}};
-
-    // with the king we have the special rule that the king can't move to a
-    // field if he then is under attack.
-
+    // Note: push_back already test if the king is in check after the move
     if (board_ref.isEmptyField(nextRow, nextColumn))
     {
-        moves.push_back(testMove, board_ref);
+        moves.push_back(Move{{row, column}, {nextRow, nextColumn}}, board_ref);
     }
     else if (board_ref.containEnemyPiece(nextRow, nextColumn))
     {
@@ -537,17 +529,20 @@ void addOneMoveForTheKing(Board& board_ref, size_t row, size_t column,
     }
 }
 
-// Note: here we don't check if the king is in check.
+// Note: here we don't check if the king is in check mate
 void addMovesOfOneKing(Board& board_ref, size_t row, size_t column,
                        MoveList& moves)
 {
     // here we add the moves with one step with the king.
     for (auto [offsetRow, offsetColumn] : neighborsOffset)
     {
-        std::size_t currentRow = row + offsetRow;
-        std::size_t currentColumn = column + offsetColumn;
-        addOneMoveForTheKing(board_ref, row, column, currentRow, currentColumn,
-                             moves);
+        std::size_t nextRow = row + offsetRow;
+        std::size_t nextColumn = column + offsetColumn;
+        if (nextRow >= 2 && nextRow <= 9 && nextColumn >= 2 && nextColumn <= 9)
+        {
+            addOneMoveForTheKing(board_ref, row, column, nextRow, nextColumn,
+                                 moves);
+        }
     }
 
     // Here we handle the castling
