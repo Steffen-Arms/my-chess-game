@@ -1,6 +1,7 @@
 #include "board.h"
 #include "move_list.h"
 #include <array>
+#include <charconv>
 #include <iostream>
 #include <ranges>
 #include <string>
@@ -170,7 +171,7 @@ void Board::addPiece(std::size_t rowIndex, std::size_t columnIndex,
 }
 
 Board::Board()
-    : m_board{startBoard()}, m_sideToMove{Color::White}, m_halfMoves{0},
+    : m_board{startBoard()}, m_sideToMove{Color::White}, m_halfMovesClock{0},
       m_whiteKing{Coord{2, 6}}, m_blackKing{Coord{9, 6}},
       m_countPiece{{{8, 2, 2, 2, 1}, {8, 2, 2, 2, 1}}}
 {
@@ -217,11 +218,21 @@ Board::Board(std::string_view fen) : m_board{}
 
     // Default is no castling rights
     m_castleKing.fill(false);
+    // set defaults for this values if they are omitted in the fen
+    m_halfMovesClock = 0;
+    m_fullMoves = 1;
 
     int count{0};
     for (auto data_iterator : metaInformation | std::views::split(' '))
     {
         std::string_view data(data_iterator.begin(), data_iterator.end());
+
+        // for trailing spaces in input string
+        if (data.empty())
+        {
+            continue;
+        }
+
         if (count == 0)
         {
             if (data == "w")
@@ -281,12 +292,15 @@ Board::Board(std::string_view fen) : m_board{}
         }
         else if (count == 3)
         {
-            m_halfMoves = data[0] - '0';
+            std::from_chars(data.data(), data.data() + data.size(),
+                            m_halfMovesClock);
             ++count;
         }
         else if (count == 4)
         {
-            m_fullMoves = data[0] - '0';
+            std::from_chars(data.data(), data.data() + data.size(),
+                            m_fullMoves);
+            ++count;
         }
     }
 }

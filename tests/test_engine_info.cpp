@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "engine_info.hpp"
+#include "engine_info.h"
 
 TEST_CASE("engine reports a name and an author", "[info]")
 {

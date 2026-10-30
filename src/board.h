@@ -243,7 +243,7 @@ class Board
     board_array m_board;
 
     Color m_sideToMove;
-    int m_halfMoves; // counted for the 50-move rule
+    int m_halfMovesClock; // counted for the 50-move rule
     int m_fullMoves;
     Coord m_whiteKing; // as we need to check after each move if the king is in
                        // check, we save the position of the kings seperate.

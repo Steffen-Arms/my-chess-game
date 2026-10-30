@@ -86,6 +86,8 @@ constexpr std::array<std::array<int, 8>, 8> kingEndTable = {{
     {-50, -40, -30, -20, -20, -30, -40, -50}  // row 8
 }};
 
+namespace
+{
 // Each Piece as a seperate value for its own.
 constexpr int obtainPieceValue(const PieceType& pieceType)
 {
@@ -170,6 +172,7 @@ bool colorIsInEndgame(Color color, const Board& board)
                     board.getPieceCount(color, PieceType::Knight) <=
                 1);
 }
+} // namespace
 
 // we define endgame if both sides don't have a queen or eevery side that have a
 // queen have at most one minor piece (bishop, knight) and no rook

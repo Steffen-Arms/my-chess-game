@@ -48,6 +48,8 @@ add_library(engine_core
   src/move.cpp
   src/perft.cpp
   src/evaluation.cpp
+  src/uci_interface.cpp
+  src/search.cpp
 )
 target_include_directories(engine_core PUBLIC src) #this line look for headers in src/
 target_link_libraries(engine_core PUBLIC engine_flags) 
